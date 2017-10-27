@@ -19,7 +19,7 @@ import com.here.account.http.HttpProvider;
 
 /**
  * A {@code ClientCredentialsProvider} identifies a token endpoint and provides
- * a mechanism to inject client credentials into access token requests.
+ * a mechanism to use credentials to authorize access token requests.
  */
 public interface ClientCredentialsProvider {
     
@@ -32,10 +32,10 @@ public interface ClientCredentialsProvider {
     String getTokenEndpointUrl();
     
     /**
-     * Gets the {@code HttpRequestAuthorizer} that will inject
-     * client credentials into access token requests.
+     * Gets the {@code HttpRequestAuthorizer} that will use
+     * client credentials to authorize access token requests.
      * 
-     * @return the client credentials authorizer
+     * @return the client authorizer
      */
     HttpProvider.HttpRequestAuthorizer getClientAuthorizer();
 }

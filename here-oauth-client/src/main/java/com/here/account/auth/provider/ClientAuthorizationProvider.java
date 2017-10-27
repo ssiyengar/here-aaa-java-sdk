@@ -1,35 +1,34 @@
 /*
- * Copyright (c) 2016 HERE Europe B.V.
- * 
+ * Copyright (c) 2017 HERE Europe B.V.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.here.account.oauth2;
+package com.here.account.auth.provider;
 
-import java.io.Closeable;
+import com.here.account.oauth2.ClientCredentialsProvider;
 
 /**
- * Wraps an object such that it is guaranteed to be "fresh" or always up to date.
- * The definition of "fresh" is implementation specific.
- * 
- * @param <T> the type of the represented object
+ * Using the returned ClientCredentialsProvider,
+ * the client can authorize its requests to obtain an OAuth2.0 Access Token.
+ *
+ * @author kmccrack
  */
-public interface Fresh<T> extends Closeable {
-    
-    /**
-     * Get the most up to date version of the wrapped object.
-     * 
-     * @return a "fresh" version of the object
-     */
-    T get();
+public interface ClientAuthorizationProvider {
 
+    /**
+     * Get the credentials to use to authenticate
+     *
+     * @return the credentials
+     */
+    ClientCredentialsProvider getClientAuthorization();
 }

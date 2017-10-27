@@ -252,7 +252,24 @@ public class HereAccount {
         public Fresh<AccessTokenResponse> requestAutoRefreshingToken(AccessTokenRequest request) 
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {
             final RefreshableResponseProvider<AccessTokenResponse> refresher = HereAccount.getRefreshableClientTokenProvider(this);
-            return () -> refresher.getUnexpiredResponse();
+            return new Fresh<AccessTokenResponse>() {
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public AccessTokenResponse get() {
+                    return refresher.getUnexpiredResponse();
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void close() throws IOException {
+                    refresher.shutdown();
+                }
+            };
         }
         
     }

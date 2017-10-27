@@ -26,7 +26,7 @@ package com.here.account.oauth2;
  * @author kmccrack
  *
  */
-public class AccessTokenException extends Exception {
+public class AccessTokenException extends RuntimeException {
 
     /**
      * default.
