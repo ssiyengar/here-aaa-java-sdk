@@ -135,7 +135,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
             boolean doCloseHttpProvider, boolean alwaysRequestNewToken) {
         this.httpProvider = httpProvider;
         this.doCloseHttpProvider = doCloseHttpProvider;
-        ClientCredentialsProvider clientCredentials = credentials.getClientAuthorization();
+        ClientCredentialsProvider clientCredentials = credentials.getClientCredentialsProvider();
         this.tokenEndpoint = HereAccount.getTokenEndpoint(httpProvider, clientCredentials);
         if (alwaysRequestNewToken) {
             // always request a new token

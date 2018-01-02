@@ -24,8 +24,9 @@ import com.here.account.http.HttpProvider;
 public interface ClientCredentialsProvider {
     
     /**
-     * Gets the url of the token endpoint for which this provider's client
-     * credentials are valid.
+     * Gets the url of the token endpoint for this OAuth 2.0 Provider.
+     * See also <a href="https://tools.ietf.org/html/rfc6749#section-3.2">The
+     * OAuth 2.0 Authorization Framework: Token Endpoint</a>.
      * 
      * @return the url of the token endpoint
      */

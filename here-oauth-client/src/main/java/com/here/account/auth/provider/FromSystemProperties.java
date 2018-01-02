@@ -31,7 +31,7 @@ public class FromSystemProperties implements ClientAuthorizationProvider {
      * {@inheritDoc}
      */
     @Override
-    public ClientCredentialsProvider getClientAuthorization() {
+    public ClientCredentialsProvider getClientCredentialsProvider() {
         Properties properties = System.getProperties();
         return getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
     }

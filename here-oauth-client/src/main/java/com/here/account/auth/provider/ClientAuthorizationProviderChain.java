@@ -28,8 +28,8 @@ public class ClientAuthorizationProviderChain implements ClientAuthorizationProv
 
     private static final Logger LOG = Logger.getLogger(ClientAuthorizationProviderChain.class.getName());
 
-    private boolean reuseMostRecentFactory = true;
-    private ClientAuthorizationProvider mostRecentFactory = null;
+    private boolean reuseMostRecentProvider = true;
+    private ClientAuthorizationProvider mostRecentProvider = null;
     private List<ClientAuthorizationProvider> clientAuthorizationProviders;
 
     public ClientAuthorizationProviderChain(ClientAuthorizationProvider... clientAuthorizationProviders) {
@@ -47,10 +47,12 @@ public class ClientAuthorizationProviderChain implements ClientAuthorizationProv
 
     private static ClientAuthorizationProviderChain getDefaultClientCredentialsProviderChain() {
         ClientAuthorizationProvider systemProvider = new FromSystemProperties();
-        ClientAuthorizationProvider fileProvider = new FromDefaultHereCredentialsPropertiesFile();
+        ClientAuthorizationProvider iniFileProvider = new FromDefaultHereCredentialsIniFile();
+        ClientAuthorizationProvider propertiesFileProvider = new FromDefaultHereCredentialsPropertiesFile();
         return new ClientAuthorizationProviderChain(
                 systemProvider,
-                fileProvider
+                iniFileProvider,
+                propertiesFileProvider
                 );
     }
 
@@ -58,20 +60,20 @@ public class ClientAuthorizationProviderChain implements ClientAuthorizationProv
      * {@inheritDoc}
      */
     @Override
-    public ClientCredentialsProvider getClientAuthorization() {
-        if (reuseMostRecentFactory && mostRecentFactory != null) {
-            return mostRecentFactory.getClientAuthorization();
+    public ClientCredentialsProvider getClientCredentialsProvider() {
+        if (reuseMostRecentProvider && mostRecentProvider != null) {
+            return mostRecentProvider.getClientCredentialsProvider();
         }
 
         for (ClientAuthorizationProvider factory : clientAuthorizationProviders) {
             try {
-                ClientCredentialsProvider credentials = factory.getClientAuthorization();
+                ClientCredentialsProvider credentials = factory.getClientCredentialsProvider();
 
                 if (null != credentials.getTokenEndpointUrl()
                     && null != credentials.getClientAuthorizer()) {
                     LOG.info("Loading credentials from " + factory.toString());
 
-                    mostRecentFactory = factory;
+                    mostRecentProvider = factory;
                     return credentials;
                 }
             } catch (Exception e) {

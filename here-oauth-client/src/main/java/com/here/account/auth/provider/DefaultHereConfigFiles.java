@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 HERE Europe B.V.
+ * Copyright (c) 2018 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,23 @@
  */
 package com.here.account.auth.provider;
 
-import com.here.account.oauth2.ClientCredentialsProvider;
+import java.io.File;
 
 /**
- * Using the returned ClientCredentialsProvider,
- * the client can authorize its requests to obtain an OAuth2.0 Access Token.
- *
  * @author kmccrack
  */
-public interface ClientAuthorizationProvider {
+class DefaultHereConfigFiles {
+    private static final String USER_DOT_HOME = "user.home";
+    private static final String DOT_HERE_SUBDIR = ".here";
 
-    /**
-     * Get the credentials to use to authenticate
-     *
-     * @return the credentials
-     */
-    ClientCredentialsProvider getClientCredentialsProvider();
+    static File getDefaultHereConfigFile(String name) {
+        String userDotHome = System.getProperty(USER_DOT_HOME);
+        if (userDotHome != null && userDotHome.length() > 0) {
+            File dir = new File(userDotHome, DOT_HERE_SUBDIR);
+            File file = new File(dir, name);
+            return file;
+        }
+        return null;
+    }
+
 }

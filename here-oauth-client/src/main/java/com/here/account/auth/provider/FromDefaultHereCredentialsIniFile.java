@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 HERE Europe B.V.
+ * Copyright (c) 2018 HERE Europe B.V.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,30 @@ package com.here.account.auth.provider;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.oauth2.ClientCredentialsProvider;
+import com.here.account.util.OAuthConstants;
+import org.ini4j.Ini;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
 /**
- * A {@link ClientAuthorizationProvider} that pulls credential values from the
- * default "~/.here/credentials.properties" file.
+ * @author kmccrack
  */
-public class FromDefaultHereCredentialsPropertiesFile implements ClientAuthorizationProvider {
+public class FromDefaultHereCredentialsIniFile implements ClientAuthorizationProvider {
 
-    private static final String CREDENTIALS_DOT_PROPERTIES_FILENAME = "credentials.properties";
+    private static final String CREDENTIALS_DOT_INI_FILENAME = "credentials.ini";
 
-    public FromDefaultHereCredentialsPropertiesFile() {
+    private final File file;
+    
+    private final String sectionName;
+
+    public FromDefaultHereCredentialsIniFile() {
+        this(getDefaultHereCredentialsIniFile(), FromDefaultHereCredentialsIniStream.DEFAULT_INI_SECTION_NAME);
+    }
+
+    public FromDefaultHereCredentialsIniFile(File file, String sectionName) {
+        this.file = file;
+        this.sectionName = sectionName;
     }
 
     /**
@@ -38,18 +48,18 @@ public class FromDefaultHereCredentialsPropertiesFile implements ClientAuthoriza
      */
     @Override
     public ClientCredentialsProvider getClientCredentialsProvider() {
-        File file = getDefaultHereCredentialsFile();
-        try {
-            Properties properties = OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
+        try (InputStream inputStream = new FileInputStream(file)) {
+            Properties properties = FromDefaultHereCredentialsIniStream
+                    .getPropertiesFromIni(inputStream, sectionName);
             return FromSystemProperties.getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
         } catch (IOException e) {
             throw new RuntimeException("trouble FromFile " + e, e);
         }
     }
 
-    static File getDefaultHereCredentialsFile() {
-        return DefaultHereConfigFiles.getDefaultHereConfigFile(CREDENTIALS_DOT_PROPERTIES_FILENAME);
-    }
+    protected static File getDefaultHereCredentialsIniFile() {
+        return DefaultHereConfigFiles.getDefaultHereConfigFile(CREDENTIALS_DOT_INI_FILENAME);
 
+    }
 
 }
