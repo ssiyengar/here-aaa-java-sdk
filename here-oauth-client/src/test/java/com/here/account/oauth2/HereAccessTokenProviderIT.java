@@ -40,13 +40,25 @@ public class HereAccessTokenProviderIT {
 
     @Test
     public void test_builder_basic() throws IOException {
+        do_builder_basic(1);
+    }
+    
+    @Test
+    public void test_builder_basic_multipleTokens() throws IOException {
+        do_builder_basic(10);
+    }
+    
+    protected void do_builder_basic(int numTokens) throws IOException {
         try (
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder().build()
         ) {
-            String accessToken = accessTokens.getAccessToken();
-            assertTrue("accessToken was null", null != accessToken);
+            for (int i = 0; i < numTokens; i++) {
+                String accessToken = accessTokens.getAccessToken();
+                assertTrue("accessToken was null", null != accessToken);
+            }
         }
     }
+
     
     @Ignore // we don't yet return credentials.ini files from our APIs
     @Test
@@ -66,7 +78,7 @@ public class HereAccessTokenProviderIT {
     public void test_builder_iniStream() throws IOException {
 
         try (
-                InputStream inputStream = getTestIniFromPropertiesFile();
+                InputStream inputStream = getTestIniFromOther();
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder()
                 .setOAuth1CredentialsProvider(new FromDefaultHereCredentialsIniStream(inputStream))
                 .build()
@@ -83,16 +95,30 @@ public class HereAccessTokenProviderIT {
      * @return
      * @throws IOException
      */
-    protected InputStream getTestIniFromPropertiesFile() throws IOException {
+    protected InputStream getTestIniFromOther() throws IOException {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             outputStream.write("[default]\n".getBytes(StandardCharsets.UTF_8));
             File file = FromDefaultHereCredentialsPropertiesFileExposer.getDefaultHereCredentialsFile();
-            Properties properties = OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
-            for (Entry<Object, Object> property : properties.entrySet()) {
-                Object name = property.getKey();
-                Object value = property.getValue();
-                String line = name + "=" + value + "\n";
-                outputStream.write(line.getBytes(StandardCharsets.UTF_8));
+            
+            // System properties first
+            String tokenEndpointUrl = System.getProperty(OAuth1ClientCredentialsProvider.FromProperties.TOKEN_ENDPOINT_URL_PROPERTY);
+            String accessKeyId = System.getProperty(OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_ID_PROPERTY);
+            String accessKeySecret = System.getProperty(OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_SECRET_PROPERTY);
+            if (null != tokenEndpointUrl && null != accessKeyId && null != accessKeySecret) {
+                outputStream.write((OAuth1ClientCredentialsProvider.FromProperties.TOKEN_ENDPOINT_URL_PROPERTY 
+                        + "=" + tokenEndpointUrl + "\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write((OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_ID_PROPERTY 
+                        + "=" + accessKeyId + "\n").getBytes(StandardCharsets.UTF_8));
+                outputStream.write((OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_SECRET_PROPERTY 
+                        + "=" + accessKeySecret + "\n").getBytes(StandardCharsets.UTF_8));
+            } else {
+                Properties properties = OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
+                for (Entry<Object, Object> property : properties.entrySet()) {
+                    Object name = property.getKey();
+                    Object value = property.getValue();
+                    String line = name + "=" + value + "\n";
+                    outputStream.write(line.getBytes(StandardCharsets.UTF_8));
+                }
             }
             outputStream.flush();
             byte[] bytes = outputStream.toByteArray();
