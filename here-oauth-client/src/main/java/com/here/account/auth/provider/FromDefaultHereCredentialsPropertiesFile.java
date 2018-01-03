@@ -15,29 +15,26 @@
  */
 package com.here.account.auth.provider;
 
-import com.here.account.auth.OAuth1ClientCredentialsProvider;
-import com.here.account.oauth2.ClientCredentialsProvider;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.here.account.auth.OAuth1ClientCredentialsProvider;
+import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
+import com.here.account.oauth2.ClientCredentialsProvider;
+
 /**
- * A {@link ClientAuthorizationProvider} that pulls credential values from the
+ * A {@link ClientCredentialsProvider} that pulls credential values from the
  * default "~/.here/credentials.properties" file.
  */
-public class FromDefaultHereCredentialsPropertiesFile implements ClientAuthorizationProvider {
+public class FromDefaultHereCredentialsPropertiesFile implements ClientCredentialsProvider {
 
     private static final String CREDENTIALS_DOT_PROPERTIES_FILENAME = "credentials.properties";
 
     public FromDefaultHereCredentialsPropertiesFile() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ClientCredentialsProvider getClientCredentialsProvider() {
+    protected ClientCredentialsProvider getClientCredentialsProvider() {
         File file = getDefaultHereCredentialsFile();
         try {
             Properties properties = OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
@@ -49,6 +46,22 @@ public class FromDefaultHereCredentialsPropertiesFile implements ClientAuthoriza
 
     static File getDefaultHereCredentialsFile() {
         return DefaultHereConfigFiles.getDefaultHereConfigFile(CREDENTIALS_DOT_PROPERTIES_FILENAME);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTokenEndpointUrl() {
+        return getClientCredentialsProvider().getTokenEndpointUrl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public HttpRequestAuthorizer getClientAuthorizer() {
+        return getClientCredentialsProvider().getClientAuthorizer();
     }
 
 

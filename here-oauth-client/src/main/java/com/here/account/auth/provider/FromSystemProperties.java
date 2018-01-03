@@ -16,22 +16,19 @@
 package com.here.account.auth.provider;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
+import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.oauth2.ClientCredentialsProvider;
 
 import java.util.Properties;
 
 /**
- * A {@link ClientAuthorizationProvider} that pulls credential values from the System Properties.
+ * A {@link ClientCredentialsProvider} that pulls credential values from the System Properties.
  */
-public class FromSystemProperties implements ClientAuthorizationProvider {
+public class FromSystemProperties implements ClientCredentialsProvider {
     public FromSystemProperties() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ClientCredentialsProvider getClientCredentialsProvider() {
+    protected ClientCredentialsProvider getClientCredentialsProvider() {
         Properties properties = System.getProperties();
         return getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
     }
@@ -44,6 +41,22 @@ public class FromSystemProperties implements ClientAuthorizationProvider {
                 properties.getProperty(OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_ID_PROPERTY),
                 properties.getProperty(OAuth1ClientCredentialsProvider.FromProperties.ACCESS_KEY_SECRET_PROPERTY)
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTokenEndpointUrl() {
+        return getClientCredentialsProvider().getTokenEndpointUrl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public HttpRequestAuthorizer getClientAuthorizer() {
+        return getClientCredentialsProvider().getClientAuthorizer();
     }
 
 

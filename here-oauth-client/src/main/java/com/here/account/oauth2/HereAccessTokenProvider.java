@@ -15,13 +15,12 @@
  */
 package com.here.account.oauth2;
 
-import com.here.account.auth.provider.ClientAuthorizationProvider;
+import java.io.Closeable;
+import java.io.IOException;
+
 import com.here.account.auth.provider.ClientAuthorizationProviderChain;
 import com.here.account.http.HttpProvider;
 import com.here.account.http.apache.ApacheHttpClientProvider;
-
-import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * An implementation to get HERE Access Tokens, that is configured using its Builder.
@@ -50,7 +49,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
      * and the "always fresh" Access Token.
      */
     public static class Builder {
-        private ClientAuthorizationProvider credentials;
+        private ClientCredentialsProvider credentials;
         private HttpProvider httpProvider;
         private boolean alwaysRequestNewToken = false;
 
@@ -61,7 +60,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
          * @param credentials the credentials to set
          * @return this Builder
          */
-        public Builder setOAuth1CredentialsProvider(ClientAuthorizationProvider credentials) {
+        public Builder setOAuth1CredentialsProvider(ClientCredentialsProvider credentials) {
             this.credentials = credentials;
             return this;
         }
@@ -131,12 +130,11 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
     private final Fresh<AccessTokenResponse> fresh;
 
 
-    private HereAccessTokenProvider(ClientAuthorizationProvider credentials, HttpProvider httpProvider,
+    private HereAccessTokenProvider(ClientCredentialsProvider credentials, HttpProvider httpProvider,
             boolean doCloseHttpProvider, boolean alwaysRequestNewToken) {
         this.httpProvider = httpProvider;
         this.doCloseHttpProvider = doCloseHttpProvider;
-        ClientCredentialsProvider clientCredentials = credentials.getClientCredentialsProvider();
-        this.tokenEndpoint = HereAccount.getTokenEndpoint(httpProvider, clientCredentials);
+        this.tokenEndpoint = HereAccount.getTokenEndpoint(httpProvider, credentials);
         if (alwaysRequestNewToken) {
             // always request a new token
             this.fresh = null;

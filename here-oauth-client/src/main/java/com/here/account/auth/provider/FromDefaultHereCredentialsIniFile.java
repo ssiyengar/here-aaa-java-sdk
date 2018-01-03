@@ -16,6 +16,7 @@
 package com.here.account.auth.provider;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
+import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.oauth2.ClientCredentialsProvider;
 import com.here.account.util.OAuthConstants;
 import org.ini4j.Ini;
@@ -26,7 +27,7 @@ import java.util.Properties;
 /**
  * @author kmccrack
  */
-public class FromDefaultHereCredentialsIniFile implements ClientAuthorizationProvider {
+public class FromDefaultHereCredentialsIniFile implements ClientCredentialsProvider {
 
     private static final String CREDENTIALS_DOT_INI_FILENAME = "credentials.ini";
 
@@ -43,11 +44,7 @@ public class FromDefaultHereCredentialsIniFile implements ClientAuthorizationPro
         this.sectionName = sectionName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ClientCredentialsProvider getClientCredentialsProvider() {
+    protected ClientCredentialsProvider getClientCredentialsProvider() {
         try (InputStream inputStream = new FileInputStream(file)) {
             Properties properties = FromDefaultHereCredentialsIniStream
                     .getPropertiesFromIni(inputStream, sectionName);
@@ -60,6 +57,22 @@ public class FromDefaultHereCredentialsIniFile implements ClientAuthorizationPro
     protected static File getDefaultHereCredentialsIniFile() {
         return DefaultHereConfigFiles.getDefaultHereConfigFile(CREDENTIALS_DOT_INI_FILENAME);
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getTokenEndpointUrl() {
+        return getClientCredentialsProvider().getTokenEndpointUrl();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public HttpRequestAuthorizer getClientAuthorizer() {
+        return getClientCredentialsProvider().getClientAuthorizer();
     }
 
 }
