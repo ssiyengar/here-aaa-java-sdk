@@ -12,7 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package com.here.account.oauth2;
+ */
+package com.here.account.oauth2;
 
 import static org.junit.Assert.assertTrue;
 
@@ -34,13 +35,19 @@ import com.here.account.auth.provider.FromDefaultHereCredentialsIniStream;
 import com.here.account.auth.provider.FromDefaultHereCredentialsPropertiesFileExposer;
 
 /**
- * Created by kmccrack on 1/2/18.
+ * @author kmccrack
  */
 public class HereAccessTokenProviderIT {
 
     @Test
     public void test_builder_basic() throws IOException {
-        do_builder_basic(1);
+        try (
+                HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder().build()
+        ) {
+            String accessToken = accessTokens.getAccessToken();
+            assertTrue("accessToken was null", null != accessToken);
+            assertTrue("accessToken was blank", accessToken.trim().length() > 0);
+        }
     }
     
     @Test
@@ -55,6 +62,7 @@ public class HereAccessTokenProviderIT {
             for (int i = 0; i < numTokens; i++) {
                 String accessToken = accessTokens.getAccessToken();
                 assertTrue("accessToken was null", null != accessToken);
+                assertTrue("accessToken was blank", accessToken.trim().length() > 0);
             }
         }
     }
@@ -71,6 +79,7 @@ public class HereAccessTokenProviderIT {
         ) {
             String accessToken = accessTokens.getAccessToken();
             assertTrue("accessToken was null", null != accessToken);
+            assertTrue("accessToken was blank", accessToken.trim().length() > 0);
         }
     }
     
@@ -85,6 +94,7 @@ public class HereAccessTokenProviderIT {
         ) {
             String accessToken = accessTokens.getAccessToken();
             assertTrue("accessToken was null", null != accessToken);
+            assertTrue("accessToken was blank", accessToken.trim().length() > 0);
         }
     }
 
