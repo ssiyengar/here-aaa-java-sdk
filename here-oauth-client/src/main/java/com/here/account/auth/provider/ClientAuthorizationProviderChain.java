@@ -48,7 +48,7 @@ public class ClientAuthorizationProviderChain implements ClientCredentialsProvid
 
     private static ClientAuthorizationProviderChain getDefaultClientCredentialsProviderChain() {
         ClientCredentialsProvider systemProvider = new FromSystemProperties();
-        ClientCredentialsProvider iniFileProvider = new FromDefaultHereCredentialsIniFile();
+        ClientCredentialsProvider iniFileProvider = new FromHereCredentialsIniFile();
         ClientCredentialsProvider propertiesFileProvider = new FromDefaultHereCredentialsPropertiesFile();
         return new ClientAuthorizationProviderChain(
                 systemProvider,

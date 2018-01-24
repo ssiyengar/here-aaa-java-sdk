@@ -15,19 +15,19 @@
  */
 package com.here.account.auth.provider;
 
-import com.here.account.auth.OAuth1ClientCredentialsProvider;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
+
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.oauth2.ClientCredentialsProvider;
-import com.here.account.util.OAuthConstants;
-import org.ini4j.Ini;
-
-import java.io.*;
-import java.util.Properties;
 
 /**
  * @author kmccrack
  */
-public class FromDefaultHereCredentialsIniFile implements ClientCredentialsProvider {
+public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
 
     private static final String CREDENTIALS_DOT_INI_FILENAME = "credentials.ini";
 
@@ -35,20 +35,24 @@ public class FromDefaultHereCredentialsIniFile implements ClientCredentialsProvi
     
     private final String sectionName;
 
-    public FromDefaultHereCredentialsIniFile() {
-        this(getDefaultHereCredentialsIniFile(), FromDefaultHereCredentialsIniStream.DEFAULT_INI_SECTION_NAME);
+    public FromHereCredentialsIniFile() {
+        this(getDefaultHereCredentialsIniFile(), FromHereCredentialsIniStream.DEFAULT_INI_SECTION_NAME);
     }
 
-    public FromDefaultHereCredentialsIniFile(File file, String sectionName) {
+    public FromHereCredentialsIniFile(File file, String sectionName) {
+        Objects.requireNonNull(file, "file is required");
+
         this.file = file;
         this.sectionName = sectionName;
+    }
+    
+    protected File getFile() {
+        return file;
     }
 
     protected ClientCredentialsProvider getClientCredentialsProvider() {
         try (InputStream inputStream = new FileInputStream(file)) {
-            Properties properties = FromDefaultHereCredentialsIniStream
-                    .getPropertiesFromIni(inputStream, sectionName);
-            return FromSystemProperties.getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
+            return FromHereCredentialsIniStream.getClientCredentialsProvider(inputStream, sectionName);
         } catch (IOException e) {
             throw new RuntimeException("trouble FromFile " + e, e);
         }

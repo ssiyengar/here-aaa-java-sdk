@@ -30,8 +30,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
-import com.here.account.auth.provider.FromDefaultHereCredentialsIniFile;
-import com.here.account.auth.provider.FromDefaultHereCredentialsIniStream;
+import com.here.account.auth.provider.FromHereCredentialsIniFile;
+import com.here.account.auth.provider.FromHereCredentialsIniStream;
 import com.here.account.auth.provider.FromDefaultHereCredentialsPropertiesFileExposer;
 
 /**
@@ -74,7 +74,7 @@ public class HereAccessTokenProviderIT {
 
         try (
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder()
-                .setOAuth1CredentialsProvider(new FromDefaultHereCredentialsIniFile())
+                .setOAuth1CredentialsProvider(new FromHereCredentialsIniFile())
                 .build()
         ) {
             String accessToken = accessTokens.getAccessToken();
@@ -89,7 +89,7 @@ public class HereAccessTokenProviderIT {
         try (
                 InputStream inputStream = getTestIniFromOther();
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder()
-                .setOAuth1CredentialsProvider(new FromDefaultHereCredentialsIniStream(inputStream))
+                .setOAuth1CredentialsProvider(new FromHereCredentialsIniStream(inputStream))
                 .build()
         ) {
             String accessToken = accessTokens.getAccessToken();

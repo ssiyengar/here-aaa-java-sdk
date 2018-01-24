@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.ini4j.Ini;
@@ -13,23 +14,25 @@ import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.oauth2.ClientCredentialsProvider;
 import com.here.account.util.OAuthConstants;
 
-public class FromDefaultHereCredentialsIniStream implements ClientCredentialsProvider {
+public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
     
     private final String sectionName;
     private final ClientCredentialsProvider delegate;
     
-    public FromDefaultHereCredentialsIniStream(InputStream is) {
-        this(is, DEFAULT_INI_SECTION_NAME);
+    public FromHereCredentialsIniStream(InputStream inputStream) {
+        this(inputStream, DEFAULT_INI_SECTION_NAME);
     }
         
-    public FromDefaultHereCredentialsIniStream(InputStream is, String sectionName) {
+    public FromHereCredentialsIniStream(InputStream inputStream, String sectionName) {
+        Objects.requireNonNull(inputStream, "inputStream is required");
+
         this.sectionName = sectionName;
-        this.delegate = getClientCredentialsProvider(is);
+        this.delegate = getClientCredentialsProvider(inputStream, sectionName);
     }
 
-    protected ClientCredentialsProvider getClientCredentialsProvider(InputStream is) {
+    protected static ClientCredentialsProvider getClientCredentialsProvider(InputStream inputStream, String sectionName) {
         try {
-            Properties properties = getPropertiesFromIni(is, sectionName);
+            Properties properties = getPropertiesFromIni(inputStream, sectionName);
             return FromSystemProperties.getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
         } catch (IOException e) {
             throw new RuntimeException("trouble FromFile " + e, e);
