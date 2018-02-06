@@ -32,9 +32,8 @@ public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
     private static final String CREDENTIALS_DOT_INI_FILENAME = "credentials.ini";
 
     private final File file;
-    
     private final String sectionName;
-
+    
     public FromHereCredentialsIniFile() {
         this(getDefaultHereCredentialsIniFile(), FromHereCredentialsIniStream.DEFAULT_INI_SECTION_NAME);
     }
@@ -46,16 +45,22 @@ public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
         this.sectionName = sectionName;
     }
     
-    protected File getFile() {
-        return file;
-    }
-
-    protected ClientCredentialsProvider getClientCredentialsProvider() {
+    /**
+     * The delegate allows for reloading the file each time it is used, 
+     * in case it has changed.
+     * 
+     * @return
+     */
+    protected ClientCredentialsProvider getDelegate() {
         try (InputStream inputStream = new FileInputStream(file)) {
-            return FromHereCredentialsIniStream.getClientCredentialsProvider(inputStream, sectionName);
+            return new FromHereCredentialsIniStream(inputStream, sectionName);
         } catch (IOException e) {
             throw new RuntimeException("trouble FromFile " + e, e);
         }
+    }
+    
+    protected File getFile() {
+        return file;
     }
 
     protected static File getDefaultHereCredentialsIniFile() {
@@ -68,7 +73,7 @@ public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
      */
     @Override
     public String getTokenEndpointUrl() {
-        return getClientCredentialsProvider().getTokenEndpointUrl();
+        return getDelegate().getTokenEndpointUrl();
     }
 
     /**
@@ -76,7 +81,7 @@ public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
      */
     @Override
     public HttpRequestAuthorizer getClientAuthorizer() {
-        return getClientCredentialsProvider().getClientAuthorizer();
+        return getDelegate().getClientAuthorizer();
     }
 
 }

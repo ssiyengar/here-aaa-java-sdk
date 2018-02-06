@@ -28,7 +28,7 @@ public class FromSystemProperties implements ClientCredentialsProvider {
     public FromSystemProperties() {
     }
 
-    protected ClientCredentialsProvider getClientCredentialsProvider() {
+    protected ClientCredentialsProvider getDelegate() {
         Properties properties = System.getProperties();
         return getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
     }
@@ -48,7 +48,7 @@ public class FromSystemProperties implements ClientCredentialsProvider {
      */
     @Override
     public String getTokenEndpointUrl() {
-        return getClientCredentialsProvider().getTokenEndpointUrl();
+        return getDelegate().getTokenEndpointUrl();
     }
 
     /**
@@ -56,7 +56,7 @@ public class FromSystemProperties implements ClientCredentialsProvider {
      */
     @Override
     public HttpRequestAuthorizer getClientAuthorizer() {
-        return getClientCredentialsProvider().getClientAuthorizer();
+        return getDelegate().getClientAuthorizer();
     }
 
 

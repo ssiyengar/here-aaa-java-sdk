@@ -22,14 +22,24 @@ public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
     public FromHereCredentialsIniStream(InputStream inputStream) {
         this(inputStream, DEFAULT_INI_SECTION_NAME);
     }
-        
+    
     public FromHereCredentialsIniStream(InputStream inputStream, String sectionName) {
         Objects.requireNonNull(inputStream, "inputStream is required");
 
         this.sectionName = sectionName;
+        
+        // the delegate is fixed, because you cannot rewind an inputStream
         this.delegate = getClientCredentialsProvider(inputStream, sectionName);
     }
-
+    
+    protected String getSectionName() {
+        return sectionName;
+    }
+    
+    protected ClientCredentialsProvider getDelegate() {
+        return delegate;
+    }
+        
     protected static ClientCredentialsProvider getClientCredentialsProvider(InputStream inputStream, String sectionName) {
         try {
             Properties properties = getPropertiesFromIni(inputStream, sectionName);
@@ -62,7 +72,7 @@ public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
      */
     @Override
     public String getTokenEndpointUrl() {
-        return delegate.getTokenEndpointUrl();
+        return getDelegate().getTokenEndpointUrl();
     }
 
     /**
@@ -70,7 +80,7 @@ public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
      */
     @Override
     public HttpRequestAuthorizer getClientAuthorizer() {
-        return delegate.getClientAuthorizer();
+        return getDelegate().getClientAuthorizer();
     }
 
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -37,6 +38,13 @@ public class FromHereCredentialsIniFileTest {
         String prefix = UUID.randomUUID().toString();
         file = File.createTempFile(prefix, null);
         file.deleteOnExit();
+    }
+    
+    @After
+    public void tearDown() {
+        if (null != file) {
+            file.delete();
+        }
     }
     
     @Test(expected = NullPointerException.class)
