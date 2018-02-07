@@ -74,7 +74,7 @@ public class HereAccessTokenProviderIT {
 
         try (
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder()
-                .setOAuth1CredentialsProvider(new FromHereCredentialsIniFile())
+                .setClientCredentialsProvider(new FromHereCredentialsIniFile())
                 .build()
         ) {
             String accessToken = accessTokens.getAccessToken();
@@ -89,7 +89,7 @@ public class HereAccessTokenProviderIT {
         try (
                 InputStream inputStream = getTestIniFromOther();
                 HereAccessTokenProvider accessTokens = HereAccessTokenProvider.builder()
-                .setOAuth1CredentialsProvider(new FromHereCredentialsIniStream(inputStream))
+                .setClientCredentialsProvider(new FromHereCredentialsIniStream(inputStream))
                 .build()
         ) {
             String accessToken = accessTokens.getAccessToken();

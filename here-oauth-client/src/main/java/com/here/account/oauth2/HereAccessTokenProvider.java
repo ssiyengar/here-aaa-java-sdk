@@ -49,7 +49,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
      * and the "always fresh" Access Token.
      */
     public static class Builder {
-        private ClientCredentialsProvider credentials;
+        private ClientCredentialsProvider clientCredentialsProvider;
         private HttpProvider httpProvider;
         private boolean alwaysRequestNewToken = false;
 
@@ -60,8 +60,8 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
          * @param credentials the credentials to set
          * @return this Builder
          */
-        public Builder setOAuth1CredentialsProvider(ClientCredentialsProvider credentials) {
-            this.credentials = credentials;
+        public Builder setClientCredentialsProvider(ClientCredentialsProvider credentials) {
+            this.clientCredentialsProvider = credentials;
             return this;
         }
 
@@ -103,8 +103,8 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
          */
         public HereAccessTokenProvider build() {
 
-            if (null == credentials) {
-                this.credentials = ClientAuthorizationProviderChain.DEFAULT_CLIENT_CREDENTIALS_PROVIDER_CHAIN;
+            if (null == clientCredentialsProvider) {
+                this.clientCredentialsProvider = ClientAuthorizationProviderChain.DEFAULT_CLIENT_CREDENTIALS_PROVIDER_CHAIN;
             }
 
             boolean doCloseHttpProvider = false;
@@ -116,7 +116,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
             }
 
             return new HereAccessTokenProvider(
-                    credentials,
+                    clientCredentialsProvider,
                     httpProvider,
                     doCloseHttpProvider,
                     alwaysRequestNewToken);
