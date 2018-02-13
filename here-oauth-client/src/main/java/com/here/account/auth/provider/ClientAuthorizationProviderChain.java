@@ -15,54 +15,59 @@
  */
 package com.here.account.auth.provider;
 
-import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
-import com.here.account.oauth2.ClientCredentialsProvider;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.here.account.http.HttpConstants.ContentTypes;
+import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
+import com.here.account.oauth2.AccessTokenRequest;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
+import com.here.account.oauth2.ClientCredentialsProvider;
+
 /**
  * @author kmccrack
  */
-public class ClientAuthorizationProviderChain implements ClientCredentialsProvider {
+public class ClientAuthorizationProviderChain implements ClientAuthorizationRequestProvider {
 
     private static final Logger LOG = Logger.getLogger(ClientAuthorizationProviderChain.class.getName());
 
     private boolean reuseMostRecentProvider = true;
-    private ClientCredentialsProvider mostRecentProvider = null;
-    private List<ClientCredentialsProvider> clientAuthorizationProviders;
+    private ClientAuthorizationRequestProvider mostRecentProvider = null;
+    private List<ClientAuthorizationRequestProvider> clientAuthorizationProviders;
 
-    public ClientAuthorizationProviderChain(ClientCredentialsProvider... clientAuthorizationProviders) {
-        this.clientAuthorizationProviders = new ArrayList<ClientCredentialsProvider>();
-        for (ClientCredentialsProvider clientAuthorizationProvider : clientAuthorizationProviders) {
+    public ClientAuthorizationProviderChain(ClientAuthorizationRequestProvider... clientAuthorizationProviders) {
+        this.clientAuthorizationProviders = new ArrayList<ClientAuthorizationRequestProvider>();
+        for (ClientAuthorizationRequestProvider clientAuthorizationProvider : clientAuthorizationProviders) {
             this.clientAuthorizationProviders.add(clientAuthorizationProvider);
         }
     }
 
     public ClientAuthorizationProviderChain(List<ClientCredentialsProvider> clientAuthorizationProviders) {
-        this.clientAuthorizationProviders = new ArrayList<ClientCredentialsProvider>(clientAuthorizationProviders);
+        this.clientAuthorizationProviders = new ArrayList<ClientAuthorizationRequestProvider>(clientAuthorizationProviders);
     }
 
     public static ClientAuthorizationProviderChain DEFAULT_CLIENT_CREDENTIALS_PROVIDER_CHAIN = getDefaultClientCredentialsProviderChain();
 
     private static ClientAuthorizationProviderChain getDefaultClientCredentialsProviderChain() {
-        ClientCredentialsProvider systemProvider = new FromSystemProperties();
-        ClientCredentialsProvider iniFileProvider = new FromHereCredentialsIniFile();
-        ClientCredentialsProvider propertiesFileProvider = new FromDefaultHereCredentialsPropertiesFile();
+        ClientAuthorizationRequestProvider systemProvider = new FromSystemProperties();
+        ClientAuthorizationRequestProvider iniFileProvider = new FromHereCredentialsIniFile();
+        ClientAuthorizationRequestProvider propertiesFileProvider = new FromDefaultHereCredentialsPropertiesFile();
+        ClientAuthorizationRequestProvider identityProvider = new IdentityAuthorizationRequestProvider();
         return new ClientAuthorizationProviderChain(
                 systemProvider,
                 iniFileProvider,
-                propertiesFileProvider
+                propertiesFileProvider,
+                identityProvider
                 );
     }
 
-    protected ClientCredentialsProvider getClientCredentialsProvider() {
+    protected ClientAuthorizationRequestProvider getClientCredentialsProvider() {
         if (reuseMostRecentProvider && mostRecentProvider != null) {
             return mostRecentProvider;
         }
 
-        for (ClientCredentialsProvider credentials : clientAuthorizationProviders) {
+        for (ClientAuthorizationRequestProvider credentials : clientAuthorizationProviders) {
             try {
 
                 if (null != credentials.getTokenEndpointUrl()
@@ -79,7 +84,7 @@ public class ClientAuthorizationProviderChain implements ClientCredentialsProvid
             }
         }
 
-        throw new RuntimeException("Unable to load credentials from chain");
+        throw new RequestProviderException("Unable to load credentials from chain");
     }
 
     /**
@@ -97,4 +102,22 @@ public class ClientAuthorizationProviderChain implements ClientCredentialsProvid
     public HttpRequestAuthorizer getClientAuthorizer() {
         return getClientCredentialsProvider().getClientAuthorizer();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AccessTokenRequest getNewAccessTokenRequest() {
+        return getClientCredentialsProvider().getNewAccessTokenRequest();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ContentTypes getRequestContentType() {
+        return getClientCredentialsProvider().getRequestContentType();
+    }
+
+
 }

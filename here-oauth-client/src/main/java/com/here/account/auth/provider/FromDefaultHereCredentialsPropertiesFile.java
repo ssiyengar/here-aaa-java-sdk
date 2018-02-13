@@ -21,13 +21,15 @@ import java.util.Properties;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
 import com.here.account.oauth2.ClientCredentialsProvider;
 
 /**
  * A {@link ClientCredentialsProvider} that pulls credential values from the
  * default "~/.here/credentials.properties" file.
  */
-public class FromDefaultHereCredentialsPropertiesFile implements ClientCredentialsProvider {
+public class FromDefaultHereCredentialsPropertiesFile extends ClientCredentialsGrantRequestProvider 
+implements ClientAuthorizationRequestProvider {
 
     private static final String CREDENTIALS_DOT_PROPERTIES_FILENAME = "credentials.properties";
 
@@ -40,7 +42,7 @@ public class FromDefaultHereCredentialsPropertiesFile implements ClientCredentia
             Properties properties = OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
             return FromSystemProperties.getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
         } catch (IOException e) {
-            throw new RuntimeException("trouble FromFile " + e, e);
+            throw new RequestProviderException("trouble FromFile " + e, e);
         }
     }
 

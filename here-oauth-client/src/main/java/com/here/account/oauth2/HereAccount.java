@@ -15,15 +15,21 @@
  */
 package com.here.account.oauth2;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.util.function.Supplier;
 
+import com.here.account.http.HttpConstants.ContentTypes;
 import com.here.account.http.HttpException;
 import com.here.account.http.HttpProvider;
-import com.here.account.util.JsonSerializer;
+import com.here.account.util.JacksonSerializer;
 import com.here.account.util.RefreshableResponseProvider;
+import com.here.account.util.Serializer;
 
 /**
  * Static entry point to access HERE Account via the OAuth2.0 API.  This class
@@ -146,8 +152,14 @@ public class HereAccount {
      */
     public static TokenEndpoint getTokenEndpoint(
             HttpProvider httpProvider,
-            ClientCredentialsProvider clientCredentialsProvider) {
-        return new TokenEndpointImpl( httpProvider, clientCredentialsProvider);
+            ClientAuthorizationRequestProvider clientCredentialsProvider) {
+        return getTokenEndpoint(httpProvider, clientCredentialsProvider, new JacksonSerializer());
+    }
+    
+    public static TokenEndpoint getTokenEndpoint(HttpProvider httpProvider,
+            ClientAuthorizationRequestProvider clientCredentialsProvider,
+            Serializer serializer) {
+        return new TokenEndpointImpl(httpProvider, clientCredentialsProvider, serializer);
     }
     
     /**
@@ -165,14 +177,14 @@ public class HereAccount {
      * @throws ResponseParsingException if trouble parsing the response
      */
     private static RefreshableResponseProvider<AccessTokenResponse> getRefreshableClientTokenProvider(
-            TokenEndpoint tokenEndpoint) 
+            TokenEndpoint tokenEndpoint, Supplier<AccessTokenRequest> accessTokenRequestFactory) 
             throws AccessTokenException, RequestExecutionException, ResponseParsingException {
         return new RefreshableResponseProvider<>(
                 null,
-                tokenEndpoint.requestToken(new ClientCredentialsGrantRequest()),
+                tokenEndpoint.requestToken(accessTokenRequestFactory.get()),
                 (AccessTokenResponse previous) -> {
                     try {
-                        return tokenEndpoint.requestToken(new ClientCredentialsGrantRequest());
+                        return tokenEndpoint.requestToken(accessTokenRequestFactory.get());
                     } catch (AccessTokenException | RequestExecutionException | ResponseParsingException e) {
                         throw new RuntimeException("trouble refresh: " + e, e);
                     }
@@ -188,6 +200,8 @@ public class HereAccount {
         private final HttpProvider httpProvider;
         private final String url;
         private final HttpProvider.HttpRequestAuthorizer clientAuthorizer;
+        private final ContentTypes requestContentType;
+        private final Serializer serializer;
         
         /**
          * Construct a new ability to obtain authorization from the HERE authorization server.
@@ -199,10 +213,13 @@ public class HereAccount {
          * @param clientSecret see also <a href="https://tools.ietf.org/html/rfc6749#section-2.3.1">client_secret</a>; 
          *     as recommended by the RFC, we don't provide this in the body, but make it part of the request signature.
          */
-        private TokenEndpointImpl(HttpProvider httpProvider, ClientCredentialsProvider clientCredentialsProvider) {
+        private TokenEndpointImpl(HttpProvider httpProvider, ClientAuthorizationRequestProvider clientAuthorizationProvider,
+                Serializer serializer) {
             this.httpProvider = httpProvider;
-            this.url = clientCredentialsProvider.getTokenEndpointUrl();
-            this.clientAuthorizer = clientCredentialsProvider.getClientAuthorizer();
+            this.url = clientAuthorizationProvider.getTokenEndpointUrl();
+            this.clientAuthorizer = clientAuthorizationProvider.getClientAuthorizer();
+            this.requestContentType = clientAuthorizationProvider.getRequestContentType();
+            this.serializer = serializer;
         }
 
         @Override
@@ -210,9 +227,16 @@ public class HereAccount {
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {
             String method = HTTP_METHOD_POST;
             
-            // OAuth2.0 uses application/x-www-form-urlencoded
-            HttpProvider.HttpRequest apacheRequest = httpProvider.getRequest(
+            HttpProvider.HttpRequest apacheRequest;
+            if (ContentTypes.JSON == requestContentType) {
+                String jsonBody = serializer.objectToJson(authorizationRequest);
+                apacheRequest = httpProvider.getRequest(
+                        clientAuthorizer, method, url, jsonBody);
+            } else {
+                // OAuth2.0 uses application/x-www-form-urlencoded
+                apacheRequest = httpProvider.getRequest(
                     clientAuthorizer, method, url, authorizationRequest.toFormParams());
+            }
             
             // blocking
             HttpProvider.HttpResponse apacheResponse = null;
@@ -228,30 +252,36 @@ public class HereAccount {
             try {
                 if (200 == statusCode) {
                     try {
-                        return JsonSerializer.toPojo(jsonInputStream,
+                        String json = readFully(jsonInputStream);
+                        jsonInputStream.close();
+                        jsonInputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+                        
+                        return serializer.jsonToPojo(jsonInputStream,
                                                      AccessTokenResponse.class);
-                    } catch (IOException ioe) {
-                        throw new ResponseParsingException(ioe);
+                    } catch (Exception e) {
+                        throw new ResponseParsingException(e);
                     }
                 } else {
+                    ErrorResponse errorResponse;
                     try {
                         // parse the error response
-                        ErrorResponse errorResponse = JsonSerializer.toPojo(jsonInputStream, ErrorResponse.class);
-                        throw new AccessTokenException(statusCode, errorResponse);
-                    } catch (IOException ioe) {
+                        errorResponse = serializer.jsonToPojo(jsonInputStream, ErrorResponse.class);
+                    } catch (Exception e) {
                         // if there is trouble parsing the error
-                        throw new ResponseParsingException(ioe);
+                        throw new ResponseParsingException(e);
                     }
+                    throw new AccessTokenException(statusCode, errorResponse);
                 }
             } finally {
                 nullSafeCloseThrowingUnchecked(jsonInputStream);
             }
         }
         
-        @Override
-        public Fresh<AccessTokenResponse> requestAutoRefreshingToken(AccessTokenRequest request) 
+        //@Override
+        public Fresh<AccessTokenResponse> requestAutoRefreshingToken(Supplier<AccessTokenRequest> requestSupplier) 
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {
-            final RefreshableResponseProvider<AccessTokenResponse> refresher = HereAccount.getRefreshableClientTokenProvider(this);
+            final RefreshableResponseProvider<AccessTokenResponse> refresher = 
+                    HereAccount.getRefreshableClientTokenProvider(this, requestSupplier);
             return new Fresh<AccessTokenResponse>() {
 
                 /**
@@ -270,6 +300,15 @@ public class HereAccount {
                     refresher.shutdown();
                 }
             };
+            
+        }
+        
+        @Override
+        public Fresh<AccessTokenResponse> requestAutoRefreshingToken(AccessTokenRequest request) 
+                throws AccessTokenException, RequestExecutionException, ResponseParsingException {
+            return requestAutoRefreshingToken(() -> {
+                        return new ClientCredentialsGrantRequest();
+                    });
         }
         
     }
@@ -291,6 +330,14 @@ public class HereAccount {
 
     }
 
-
+    static String readFully(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buf = new byte[4096];
+        int numRead;
+        while ((numRead = inputStream.read(buf)) > 0) {
+            baos.write(buf, 0, numRead);
+        }
+        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+    }
     
 }

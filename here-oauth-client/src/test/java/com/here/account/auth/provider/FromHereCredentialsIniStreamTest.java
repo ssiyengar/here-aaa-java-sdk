@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 
 import com.here.account.http.HttpProvider.HttpRequest;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
-import com.here.account.oauth2.ClientCredentialsProvider;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
 
 public class FromHereCredentialsIniStreamTest {
 
@@ -112,7 +112,7 @@ public class FromHereCredentialsIniStreamTest {
         
     }
     
-    protected void verifyExpected(ClientCredentialsProvider clientCredentialsProvider) {
+    protected void verifyExpected(ClientAuthorizationRequestProvider clientCredentialsProvider) {
         String actualTokenEndpointUrl = clientCredentialsProvider.getTokenEndpointUrl();
         assertTrue("tokenEndpointUrl expected "+expectedTokenEndpointUrl+", actual "+actualTokenEndpointUrl, 
                 expectedTokenEndpointUrl.equals(actualTokenEndpointUrl));

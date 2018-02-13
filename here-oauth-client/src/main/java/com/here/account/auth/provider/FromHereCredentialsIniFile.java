@@ -22,12 +22,13 @@ import java.io.InputStream;
 import java.util.Objects;
 
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
-import com.here.account.oauth2.ClientCredentialsProvider;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
 
 /**
  * @author kmccrack
  */
-public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
+public class FromHereCredentialsIniFile extends ClientCredentialsGrantRequestProvider
+implements ClientAuthorizationRequestProvider {
 
     private static final String CREDENTIALS_DOT_INI_FILENAME = "credentials.ini";
 
@@ -49,13 +50,13 @@ public class FromHereCredentialsIniFile implements ClientCredentialsProvider {
      * The delegate allows for reloading the file each time it is used, 
      * in case it has changed.
      * 
-     * @return
+     * @return the ClientAuthorizationRequestProvider
      */
-    protected ClientCredentialsProvider getDelegate() {
+    protected ClientAuthorizationRequestProvider getDelegate() {
         try (InputStream inputStream = new FileInputStream(file)) {
             return new FromHereCredentialsIniStream(inputStream, sectionName);
         } catch (IOException e) {
-            throw new RuntimeException("trouble FromFile " + e, e);
+            throw new RequestProviderException("trouble FromFile " + e, e);
         }
     }
     

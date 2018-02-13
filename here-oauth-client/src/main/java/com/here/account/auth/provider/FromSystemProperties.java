@@ -15,16 +15,18 @@
  */
 package com.here.account.auth.provider;
 
+import java.util.Properties;
+
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
 import com.here.account.oauth2.ClientCredentialsProvider;
-
-import java.util.Properties;
 
 /**
  * A {@link ClientCredentialsProvider} that pulls credential values from the System Properties.
  */
-public class FromSystemProperties implements ClientCredentialsProvider {
+public class FromSystemProperties extends ClientCredentialsGrantRequestProvider
+implements ClientAuthorizationRequestProvider {
     public FromSystemProperties() {
     }
 

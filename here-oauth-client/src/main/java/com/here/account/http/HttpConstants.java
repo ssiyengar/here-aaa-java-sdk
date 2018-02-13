@@ -39,4 +39,8 @@ public class HttpConstants {
     public static final int DEFAULT_REQUEST_TIMEOUT_IN_MS = 5000;
     public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MS = 5000;
 
+    public static enum ContentTypes {
+        JSON,
+        FORM_URLENCODED
+    }
 }

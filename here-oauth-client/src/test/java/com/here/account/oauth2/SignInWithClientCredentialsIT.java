@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.auth.OAuth1Signer;
 import com.here.account.http.HttpProvider;
+import com.here.account.http.HttpConstants.ContentTypes;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.util.Clock;
 
@@ -96,6 +97,20 @@ public class SignInWithClientCredentialsIT extends AbstractCredentialTezt {
             public HttpRequestAuthorizer getClientAuthorizer() {
                 return oauth1Signer;
             }
+
+            @Override
+            public AccessTokenRequest getNewAccessTokenRequest() {
+                return new ClientCredentialsGrantRequest();
+            }
+            
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ContentTypes getRequestContentType() {
+                return ContentTypes.FORM_URLENCODED;
+            }
+
             
         };
         

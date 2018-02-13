@@ -17,6 +17,7 @@ package com.here.account.oauth2;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import com.here.account.auth.provider.ClientAuthorizationProviderChain;
 import com.here.account.http.HttpProvider;
@@ -49,19 +50,23 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
      * and the "always fresh" Access Token.
      */
     public static class Builder {
-        private ClientCredentialsProvider clientCredentialsProvider;
+        private ClientAuthorizationRequestProvider clientAuthorizationRequestProvider;
         private HttpProvider httpProvider;
         private boolean alwaysRequestNewToken = false;
+        
+        private Builder() {
+        }
 
         /**
-         * Optionally set your custom OAuth1ClientCredentialsProvider,
+         * Optionally set your custom ClientAuthorizationRequestProvider,
          * to override the default.
          *
-         * @param credentials the credentials to set
+         * @param clientAuthorizationRequestProvider the clientAuthorizationRequestProvider to set
          * @return this Builder
          */
-        public Builder setClientCredentialsProvider(ClientCredentialsProvider credentials) {
-            this.clientCredentialsProvider = credentials;
+        public Builder setClientAuthorizationRequestProvider(
+                ClientAuthorizationRequestProvider clientAuthorizationRequestProvider) {
+            this.clientAuthorizationRequestProvider = clientAuthorizationRequestProvider;
             return this;
         }
 
@@ -103,8 +108,9 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
          */
         public HereAccessTokenProvider build() {
 
-            if (null == clientCredentialsProvider) {
-                this.clientCredentialsProvider = ClientAuthorizationProviderChain.DEFAULT_CLIENT_CREDENTIALS_PROVIDER_CHAIN;
+            if (null == clientAuthorizationRequestProvider) {
+                this.clientAuthorizationRequestProvider = 
+                        ClientAuthorizationProviderChain.DEFAULT_CLIENT_CREDENTIALS_PROVIDER_CHAIN;
             }
 
             boolean doCloseHttpProvider = false;
@@ -116,7 +122,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
             }
 
             return new HereAccessTokenProvider(
-                    clientCredentialsProvider,
+                    clientAuthorizationRequestProvider,
                     httpProvider,
                     doCloseHttpProvider,
                     alwaysRequestNewToken);
@@ -127,26 +133,26 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
     private final HttpProvider httpProvider;
     private final boolean doCloseHttpProvider;
     private final TokenEndpoint tokenEndpoint;
+    private final Supplier<AccessTokenRequest> accessTokenRequestSupplier;
     private final Fresh<AccessTokenResponse> fresh;
 
 
-    private HereAccessTokenProvider(ClientCredentialsProvider credentials, HttpProvider httpProvider,
+    private HereAccessTokenProvider(ClientAuthorizationRequestProvider credentials, HttpProvider httpProvider,
             boolean doCloseHttpProvider, boolean alwaysRequestNewToken) {
         this.httpProvider = httpProvider;
         this.doCloseHttpProvider = doCloseHttpProvider;
         this.tokenEndpoint = HereAccount.getTokenEndpoint(httpProvider, credentials);
+        this.accessTokenRequestSupplier = () -> {
+            return credentials.getNewAccessTokenRequest();
+        };
         if (alwaysRequestNewToken) {
             // always request a new token
             this.fresh = null;
         } else {
             // use the auto-refreshing technique
             this.fresh = tokenEndpoint.requestAutoRefreshingToken(
-                    getNewClientCredentialsGrantRequest());
+                    accessTokenRequestSupplier);
         }
-    }
-
-    private AccessTokenRequest getNewClientCredentialsGrantRequest() {
-        return new ClientCredentialsGrantRequest();
     }
 
     /**
@@ -157,7 +163,7 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
         if (null != fresh) {
             return fresh.get().getAccessToken();
         } else {
-            return tokenEndpoint.requestToken(getNewClientCredentialsGrantRequest()).getAccessToken();
+            return tokenEndpoint.requestToken(accessTokenRequestSupplier.get()).getAccessToken();
         }
     }
 

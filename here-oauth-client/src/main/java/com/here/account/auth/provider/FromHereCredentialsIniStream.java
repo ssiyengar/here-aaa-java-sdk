@@ -11,13 +11,14 @@ import org.ini4j.Ini;
 
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
-import com.here.account.oauth2.ClientCredentialsProvider;
+import com.here.account.oauth2.ClientAuthorizationRequestProvider;
 import com.here.account.util.OAuthConstants;
 
-public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
+public class FromHereCredentialsIniStream extends ClientCredentialsGrantRequestProvider
+implements ClientAuthorizationRequestProvider {
     
     private final String sectionName;
-    private final ClientCredentialsProvider delegate;
+    private final ClientAuthorizationRequestProvider delegate;
     
     public FromHereCredentialsIniStream(InputStream inputStream) {
         this(inputStream, DEFAULT_INI_SECTION_NAME);
@@ -36,16 +37,16 @@ public class FromHereCredentialsIniStream implements ClientCredentialsProvider {
         return sectionName;
     }
     
-    protected ClientCredentialsProvider getDelegate() {
+    protected ClientAuthorizationRequestProvider getDelegate() {
         return delegate;
     }
         
-    protected static ClientCredentialsProvider getClientCredentialsProvider(InputStream inputStream, String sectionName) {
+    protected static ClientAuthorizationRequestProvider getClientCredentialsProvider(InputStream inputStream, String sectionName) {
         try {
             Properties properties = getPropertiesFromIni(inputStream, sectionName);
             return FromSystemProperties.getClientCredentialsProviderWithDefaultTokenEndpointUrl(properties);
         } catch (IOException e) {
-            throw new RuntimeException("trouble FromFile " + e, e);
+            throw new RequestProviderException("trouble FromFile " + e, e);
         }
     }
 

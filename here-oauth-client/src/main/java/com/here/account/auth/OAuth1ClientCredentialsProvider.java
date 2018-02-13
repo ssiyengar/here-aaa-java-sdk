@@ -23,6 +23,9 @@ import java.util.Objects;
 import java.util.Properties;
 
 import com.here.account.http.HttpProvider;
+import com.here.account.http.HttpConstants.ContentTypes;
+import com.here.account.oauth2.AccessTokenRequest;
+import com.here.account.oauth2.ClientCredentialsGrantRequest;
 import com.here.account.oauth2.ClientCredentialsProvider;
 
 /**
@@ -124,7 +127,7 @@ public class OAuth1ClientCredentialsProvider implements ClientCredentialsProvide
      *
      * @param file the File to use as input
      * @return the Properties populated from the specified file's contents
-     * @throws IOException
+     * @throws IOException if there is trouble reading the properties from the file
      */
     public static Properties getPropertiesFromFile(File file) throws IOException {
         InputStream inputStream = null;
@@ -139,5 +142,22 @@ public class OAuth1ClientCredentialsProvider implements ClientCredentialsProvide
             }
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AccessTokenRequest getNewAccessTokenRequest() {
+        return new ClientCredentialsGrantRequest();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ContentTypes getRequestContentType() {
+        return ContentTypes.FORM_URLENCODED;
+    }
+
 
 }
