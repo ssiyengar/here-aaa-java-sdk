@@ -252,9 +252,7 @@ public class HereAccount {
             try {
                 if (200 == statusCode) {
                     try {
-                        String json = readFully(jsonInputStream);
-                        jsonInputStream.close();
-                        jsonInputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+                        jsonInputStream = readFully(jsonInputStream);
                         
                         return serializer.jsonToPojo(jsonInputStream,
                                                      AccessTokenResponse.class);
@@ -330,14 +328,17 @@ public class HereAccount {
 
     }
 
-    static String readFully(InputStream inputStream) throws IOException {
+    static InputStream readFully(InputStream inputStream) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buf = new byte[4096];
         int numRead;
         while ((numRead = inputStream.read(buf)) > 0) {
             baos.write(buf, 0, numRead);
         }
-        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        String json = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        inputStream.close();
+        inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
+        return inputStream;
     }
     
 }
