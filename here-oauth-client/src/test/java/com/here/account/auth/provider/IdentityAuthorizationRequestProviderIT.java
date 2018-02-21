@@ -17,12 +17,13 @@ package com.here.account.auth.provider;
 
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.here.account.oauth2.HereAccessTokenProvider;
 
 
-
+@Ignore
 public class IdentityAuthorizationRequestProviderIT {
     
     private IdentityAuthorizationRequestProvider identityAuthorizationRequestProvider = new IdentityAuthorizationRequestProvider();

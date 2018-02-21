@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 
+
 import com.here.account.auth.OAuth1ClientCredentialsProvider;
 import com.here.account.auth.OAuth2Authorizer;
 import com.here.account.http.HttpConstants.ContentTypes;
@@ -36,7 +37,11 @@ import com.here.account.util.Serializer;
 
 public class IdentityAuthorizationRequestProvider implements ClientAuthorizationRequestProvider {
 
-    private static final String IDENTITY_SERVICE_TOKEN_ENDPOINT_URL = "http://192.168.99.100:30756/token";
+    private static final String IDENTITY_SERVICE_TOKEN_ENDPOINT_URL = 
+            "file:///var/run/identity/accessToken";
+            //"http://identity.here-olp-identity-service-sit.svc.cluster.local:8080/token";
+            //"http://192.168.99.100:32744/token";
+            //"http://127.0.0.1:8080/token";
     
     private static final String ACCESS_TOKEN_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/token";
     

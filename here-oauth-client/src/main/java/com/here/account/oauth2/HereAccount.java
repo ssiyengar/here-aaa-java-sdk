@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
@@ -221,10 +222,30 @@ public class HereAccount {
             this.requestContentType = clientAuthorizationProvider.getRequestContentType();
             this.serializer = serializer;
         }
+        
+        protected AccessTokenResponse requestTokenFromFile() 
+            throws RequestExecutionException {
+            try (InputStream is = new URL(url).openStream()){
+                return serializer.jsonToPojo(is,
+                        AccessTokenResponse.class);
+            } catch (IOException e) {
+                throw new RequestExecutionException(e);
+            }
+        }
 
         @Override
         public AccessTokenResponse requestToken(AccessTokenRequest authorizationRequest) 
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {
+            if (url.startsWith("file://")) {
+                return requestTokenFromFile();
+            } else {
+                return requestTokenHttp(authorizationRequest);
+            }
+        }
+        
+        protected AccessTokenResponse requestTokenHttp(AccessTokenRequest authorizationRequest) 
+                throws AccessTokenException, RequestExecutionException, ResponseParsingException {
+            
             String method = HTTP_METHOD_POST;
             
             HttpProvider.HttpRequest apacheRequest;
@@ -328,14 +349,26 @@ public class HereAccount {
 
     }
 
-    static InputStream readFully(InputStream inputStream) throws IOException {
+    /**
+     * 16 Kilobytes.
+     */
+    private final static int MAX_BYTES_TO_READ = 1024*16;
+    
+    static byte[] readToBytes(InputStream inputStream) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buf = new byte[4096];
         int numRead;
-        while ((numRead = inputStream.read(buf)) > 0) {
+        int totalRead = 0;
+        while (totalRead < MAX_BYTES_TO_READ && (numRead = inputStream.read(buf)) > 0) {
             baos.write(buf, 0, numRead);
+            totalRead += MAX_BYTES_TO_READ;
         }
-        String json = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        return baos.toByteArray();
+    }
+    
+    static InputStream readFully(InputStream inputStream) throws IOException {
+        byte[] bytes = readToBytes(inputStream);
+        String json = new String(bytes, StandardCharsets.UTF_8);
         inputStream.close();
         inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
         return inputStream;
