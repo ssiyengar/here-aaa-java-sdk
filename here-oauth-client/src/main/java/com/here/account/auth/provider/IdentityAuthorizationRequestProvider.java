@@ -37,14 +37,23 @@ import com.here.account.util.Serializer;
 
 public class IdentityAuthorizationRequestProvider implements ClientAuthorizationRequestProvider {
 
+    /**
+     * The HERE Access Token URL.
+     */
     private static final String IDENTITY_SERVICE_TOKEN_ENDPOINT_URL = 
-            "file:///var/run/identity/accessToken";
+            "file:///var/run/secrets/identity/access-token";
             //"http://identity.here-olp-identity-service-sit.svc.cluster.local:8080/token";
             //"http://192.168.99.100:32744/token";
             //"http://127.0.0.1:8080/token";
     
+    /**
+     * The Kubernetes Service Access Token file.
+     */
     private static final String ACCESS_TOKEN_FILE = "/var/run/secrets/kubernetes.io/serviceaccount/token";
-    
+
+    /**
+     * The Identity Service token request file.
+     */
     private static final String IDENTITY_TOKEN_REQUEST_FILE = "/var/run/identity/identity.json";
     
     private static final String RUN_AS_ID = "runAsId";
@@ -52,13 +61,15 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     private static final String NAME = "name";
     
     private final Serializer serializer;
+    private final String tokenUrl;
     
     public IdentityAuthorizationRequestProvider() {
-        this(new JacksonSerializer());
+        this(new JacksonSerializer(), IDENTITY_SERVICE_TOKEN_ENDPOINT_URL);
     }
     
-    public IdentityAuthorizationRequestProvider(Serializer serializer) {
+    public IdentityAuthorizationRequestProvider(Serializer serializer, String tokenUrl) {
         this.serializer = serializer;
+        this.tokenUrl = tokenUrl;
     }
     
     /**
@@ -66,7 +77,7 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
      */
     @Override
     public String getTokenEndpointUrl() {
-        return IDENTITY_SERVICE_TOKEN_ENDPOINT_URL;
+        return tokenUrl;
         
     }
     

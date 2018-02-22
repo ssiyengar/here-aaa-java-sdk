@@ -108,22 +108,34 @@ public abstract class AccessTokenRequest {
     }
 
     /**
-     * Get the scope for the token.
+     * Get the scope for the token request.  See also 
+     * <a href="http://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims">
+     * Requesting Claims using Scope Values</a>.
+     * 
+     * <p>
      * The example value is "openid
      * sdp:GROUP-6bb1bfd9-8bdc-46c2-85cd-754068aa9497,
      * GROUP-84ba52de-f80b-4047-a024-33d81e6153df"
      * openid : Specifies the idToken is expected in the response
      * sdp:[List of groupId separated by ',']
+     * 
+     * @return the scope
      */
     public String getScope() {
         return this.scope;
     }
 
     /**
-     * Get the scope for the token.
+     * Set the scope for the token request.  See also 
+     * <a href="http://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims">
+     * Requesting Claims using Scope Values</a>.
+     * 
+     * <p>
      * The example value is "openid
      * sdp:GROUP-6bb1bfd9-8bdc-46c2-85cd-754068aa9497,
-     * GROUP-84ba52de-f80b-4047-a024-33d81e6153df"
+     * GROUP-84ba52de-f80b-4047-a024-33d81e6153df".
+     * 
+     * @param scope the scope to set
      */
     public AccessTokenRequest setScope(String scope) {
         this.scope = scope;

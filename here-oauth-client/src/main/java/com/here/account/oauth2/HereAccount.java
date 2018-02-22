@@ -227,7 +227,7 @@ public class HereAccount {
             throws RequestExecutionException {
             try (InputStream is = new URL(url).openStream()){
                 return serializer.jsonToPojo(is,
-                        AccessTokenResponse.class);
+                        FileAccessTokenResponse.class);
             } catch (IOException e) {
                 throw new RequestExecutionException(e);
             }
