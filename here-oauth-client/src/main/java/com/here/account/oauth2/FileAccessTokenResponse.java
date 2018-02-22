@@ -57,16 +57,16 @@ public class FileAccessTokenResponse extends AccessTokenResponse {
     }
     
     /**
-     * In a File-based Access Token Response, the data may have been written long 
-     * ago, and the appropriate expiresIn value is derived from the fixed quantity 
-     * "exp" minus the time of object creation.
+     * In a File-based Access Token Response, the access_token may have been written 
+     * long ago, and the appropriate expiresIn value is derived from the fixed quantity 
+     * "exp" seconds minus the time of object creation in seconds.
      * 
      * <p>
      * {@inheritDoc}
      */
     @Override
     public Long getExpiresIn() {
-        return exp - getStartTimeMilliseconds();
+        return exp - (getStartTimeMilliseconds() / 1000);
     }
 
     /**
