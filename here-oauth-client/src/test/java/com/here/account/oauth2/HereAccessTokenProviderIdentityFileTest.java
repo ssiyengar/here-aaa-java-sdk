@@ -31,10 +31,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.here.account.auth.provider.ClientAuthorizationProviderChain;
-import com.here.account.auth.provider.IdentityAuthorizationRequestProvider;
+import com.here.account.auth.provider.IdentityAuthorizationFileProvider;
 import com.here.account.util.JacksonSerializer;
 
-public class HereAccessTokenProviderIdentityTest {
+public class HereAccessTokenProviderIdentityFileTest {
     
     private final int ONE_DAY_IN_SECONDS = 24*60*60;
 
@@ -58,7 +58,7 @@ public class HereAccessTokenProviderIdentityTest {
         serializer = new JacksonSerializer();
         
         clientAuthorizationRequestProvider = 
-                new IdentityAuthorizationRequestProvider(serializer, "file://" + file.getAbsolutePath());
+                new IdentityAuthorizationFileProvider("file://" + file.getAbsolutePath());
 
 
     }

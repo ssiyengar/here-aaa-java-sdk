@@ -41,8 +41,7 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
      * The HERE Access Token URL.
      */
     private static final String IDENTITY_SERVICE_TOKEN_ENDPOINT_URL = 
-            "file:///var/run/secrets/identity/access-token";
-            //"http://identity.here-olp-identity-service-sit.svc.cluster.local:8080/token";
+            "http://identity.here-olp-identity-service-sit.svc.cluster.local:8080/token";
             //"http://192.168.99.100:32744/token";
             //"http://127.0.0.1:8080/token";
     
