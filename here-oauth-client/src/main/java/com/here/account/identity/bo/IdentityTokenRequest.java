@@ -23,7 +23,8 @@ public class IdentityTokenRequest extends AccessTokenRequest {
     
     private String runAsId;
     private String namespace;
-    private String name;
+    private String runAsIdName;
+    private String podName;
     
     public IdentityTokenRequest() {
         super(IDENTITY_GRANT_TYPE);
@@ -33,7 +34,7 @@ public class IdentityTokenRequest extends AccessTokenRequest {
         return runAsId;
     }
 
-    public IdentityTokenRequest setRunAsId(String runAsId) {
+    public IdentityTokenRequest withRunAsId(String runAsId) {
         this.runAsId = runAsId;
         return this;
     }
@@ -42,19 +43,29 @@ public class IdentityTokenRequest extends AccessTokenRequest {
         return namespace;
     }
 
-    public IdentityTokenRequest setNamespace(String namespace) {
+    public IdentityTokenRequest withNamespace(String namespace) {
         this.namespace = namespace;
         return this;
     }
 
-    public String getName() {
-        return name;
+    public String getRunAsIdName() {
+        return runAsIdName;
     }
 
-    public IdentityTokenRequest setName(String name) {
-        this.name = name;
+    public IdentityTokenRequest withRunAsIdName(String runAsIdName) {
+        this.runAsIdName = runAsIdName;
         return this;
     }
 
+    public String getPodName() {
+        return podName;
+    }
+
+    public IdentityTokenRequest withPodName(String podName) {
+        this.podName = podName;
+        return this;
+    }
+
+    
     
 }

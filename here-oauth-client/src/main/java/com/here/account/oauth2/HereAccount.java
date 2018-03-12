@@ -16,7 +16,6 @@
 package com.here.account.oauth2;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +28,7 @@ import com.here.account.http.HttpConstants.ContentTypes;
 import com.here.account.http.HttpException;
 import com.here.account.http.HttpProvider;
 import com.here.account.util.JacksonSerializer;
+import com.here.account.util.ReadUtil;
 import com.here.account.util.RefreshableResponseProvider;
 import com.here.account.util.Serializer;
 
@@ -349,25 +349,8 @@ public class HereAccount {
 
     }
 
-    /**
-     * 16 Kilobytes.
-     */
-    private final static int MAX_BYTES_TO_READ = 1024*16;
-    
-    static byte[] readToBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buf = new byte[4096];
-        int numRead;
-        int totalRead = 0;
-        while (totalRead < MAX_BYTES_TO_READ && (numRead = inputStream.read(buf)) > 0) {
-            baos.write(buf, 0, numRead);
-            totalRead += MAX_BYTES_TO_READ;
-        }
-        return baos.toByteArray();
-    }
-    
     static InputStream readFully(InputStream inputStream) throws IOException {
-        byte[] bytes = readToBytes(inputStream);
+        byte[] bytes = ReadUtil.readUpTo16KBytes(inputStream);
         String json = new String(bytes, StandardCharsets.UTF_8);
         inputStream.close();
         inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));

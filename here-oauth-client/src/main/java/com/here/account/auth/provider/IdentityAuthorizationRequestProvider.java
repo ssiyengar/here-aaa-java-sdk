@@ -55,9 +55,14 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
      */
     private static final String IDENTITY_TOKEN_REQUEST_FILE = "/var/run/identity/identity.json";
     
+    /**
+     * The Pod Name file.
+     */
+    private static final String POD_NAME_FILE = "/var/run/podinfo/name";
+    
     private static final String RUN_AS_ID = "runAsId";
     private static final String NAMESPACE = "namespace";
-    private static final String NAME = "name";
+    private static final String RUN_AS_ID_NAME = "runAsIdName";
     
     private final Serializer serializer;
     private final String tokenUrl;
@@ -86,6 +91,10 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     
     protected File getIdentityTokenRequestFile() {
         return new File(IDENTITY_TOKEN_REQUEST_FILE);
+    }
+    
+    protected File getPodNameFile() {
+        return new File(POD_NAME_FILE);
     }
 
     /**
@@ -157,21 +166,20 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
         }
     }
     
-    protected Properties getIdentityRequestProperties() throws IOException {
-        File file = this.getIdentityTokenRequestFile();
-        return OAuth1ClientCredentialsProvider.getPropertiesFromFile(file);
-    }
-
     protected IdentityTokenRequest getRequest() {
         File file = this.getIdentityTokenRequestFile();
-        
+        File podNameFile = this.getPodNameFile();
+
+        String podName = readFullyToString(podNameFile);
+
         try (InputStream inputStream = new FileInputStream(file)) {
             Map<String, Object> identityRequestMap = serializer.jsonToMap(inputStream);
             IdentityTokenRequest identityTokenRequest = new IdentityTokenRequest();
             identityTokenRequest
-                .setRunAsId((String) identityRequestMap.get(RUN_AS_ID))
-                .setNamespace((String) identityRequestMap.get(NAMESPACE))
-                .setName((String) identityRequestMap.get(NAME));
+                .withRunAsId((String) identityRequestMap.get(RUN_AS_ID))
+                .withNamespace((String) identityRequestMap.get(NAMESPACE))
+                .withRunAsIdName((String) identityRequestMap.get(RUN_AS_ID_NAME))
+                .withPodName(podName);
             return identityTokenRequest;
         } catch (IOException e) {
             throw new RequestProviderException(getClass() + ": trouble reading identity token request file " + e, e);
