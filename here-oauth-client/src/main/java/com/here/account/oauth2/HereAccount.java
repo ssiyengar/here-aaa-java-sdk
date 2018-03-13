@@ -233,18 +233,18 @@ public class HereAccount {
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {            
             String method = HTTP_METHOD_POST;
             
-            HttpProvider.HttpRequest apacheRequest;
+            HttpProvider.HttpRequest httpRequest;
             if (ContentTypes.JSON == requestContentType) {
                 String jsonBody = serializer.objectToJson(authorizationRequest);
-                apacheRequest = httpProvider.getRequest(
+                httpRequest = httpProvider.getRequest(
                         clientAuthorizer, method, url, jsonBody);
             } else {
                 // OAuth2.0 uses application/x-www-form-urlencoded
-                apacheRequest = httpProvider.getRequest(
+                httpRequest = httpProvider.getRequest(
                     clientAuthorizer, method, url, authorizationRequest.toFormParams());
             }
             
-            return client.sendMessage(apacheRequest, AccessTokenResponse.class,
+            return client.sendMessage(httpRequest, AccessTokenResponse.class,
                     ErrorResponse.class, (statusCode, errorResponse) -> {
                         return new AccessTokenException(statusCode, errorResponse);                        
                     });
