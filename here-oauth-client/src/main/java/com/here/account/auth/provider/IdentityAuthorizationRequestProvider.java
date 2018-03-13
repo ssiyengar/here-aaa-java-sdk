@@ -15,7 +15,6 @@
  */
 package com.here.account.auth.provider;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,8 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
-import com.here.account.auth.NoAuthorizer;
-import com.here.account.auth.OAuth2Authorizer;
+import com.here.account.auth.OAuth1Signer;
+import com.here.account.auth.SignatureMethod;
 import com.here.account.http.HttpConstants.ContentTypes;
 import com.here.account.http.HttpProvider.HttpRequestAuthorizer;
 import com.here.account.identity.bo.IdentityTokenRequest;
@@ -44,9 +43,9 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
             "http://identity.here-olp-identity-service-sit.svc.cluster.local:8080/token";
     
     /**
-     * The Kubernetes Service Account Token file.
+     * The Private Key to use to request tokens from Identity Service.
      */
-    private static final String SERVICE_ACCOUNT_TOKEN_FILE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    private static final String IDENTITY_PRIVATE_KEY_FILE_PATH = "/var/run/secrets/identity/privatekey";
 
     /**
      * The Identity Service token request file.
@@ -63,32 +62,32 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     private static final String RUN_AS_ID_NAME = "runAsIdName";
     
     private final Serializer serializer;
-    private final File serviceAccountTokenFile;
+    private final File privateKeyFile;
     private final File identityFile;
     private final File podNameFile;
     private final String tokenUrl;
     
     public IdentityAuthorizationRequestProvider() {
         this(new JacksonSerializer(), 
-                new File(SERVICE_ACCOUNT_TOKEN_FILE_PATH),
+                new File(IDENTITY_PRIVATE_KEY_FILE_PATH),
                 new File(IDENTITY_TOKEN_REQUEST_FILE_PATH),
                 new File(POD_NAME_FILE_PATH),
                 IDENTITY_SERVICE_TOKEN_ENDPOINT_URL);
     }
     
     public IdentityAuthorizationRequestProvider(Serializer serializer, 
-            File serviceAccountTokenFile,
+            File privateKeyFile,
             File identityFile,
             File podNameFile,
             String tokenUrl) {
-        // serviceAccessTokenFile can be null
         Objects.requireNonNull(serializer, "serializer is required");
+        Objects.requireNonNull(privateKeyFile, "privateKeyFile is required");        
         Objects.requireNonNull(identityFile, "identityFile is required");
         Objects.requireNonNull(podNameFile, "podNameFile is required");
         Objects.requireNonNull(tokenUrl, "tokenUrl is required");
 
         this.serializer = serializer;
-        this.serviceAccountTokenFile = serviceAccountTokenFile;
+        this.privateKeyFile = privateKeyFile;
         this.identityFile = identityFile;
         this.podNameFile = podNameFile;
         this.tokenUrl = tokenUrl;
@@ -121,20 +120,19 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     }
     
     protected AuthorizerAndRequest getAuthorizerAndRequest() {
+        IdentityTokenRequest identityTokenRequest = getRequest();
         return new AuthorizerAndRequest(
-                getAuthorizer(),
-                getRequest());
+                getAuthorizer(identityTokenRequest.getRunAsId()),
+                identityTokenRequest);
     }
     
-    protected HttpRequestAuthorizer getAuthorizer() {
-        if (null == serviceAccountTokenFile) {
-            return new NoAuthorizer();
+    protected HttpRequestAuthorizer getAuthorizer(String runAsId) {
+        String privateKey = readFullyToString(this.privateKeyFile);
+        if (privateKey.length() == 0) {
+            throw new RequestProviderException(getClass() + ": zero-length privatekey");
         }
-        String identityServiceAccessToken = readFullyToString(this.serviceAccountTokenFile);
-        if (identityServiceAccessToken.length() == 0) {
-            throw new RequestProviderException(getClass() + ": zero-length service access token");
-        }
-        return new OAuth2Authorizer(identityServiceAccessToken);
+        // oauth_consumer_key=<runAsId>
+        return new OAuth1Signer(runAsId, privateKey, SignatureMethod.ES512);
     }
     
     private class AuthorizerAndRequest {

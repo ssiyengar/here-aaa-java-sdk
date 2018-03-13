@@ -17,7 +17,7 @@ package com.here.account.oauth2;
 
 /**
  * If you had trouble authenticating, and got an HTTP response, 
- * you get an AuthenticationException.
+ * you get an AccessTokenException.
  * This could be because the client or resource owner failed to 
  * properly authenticate a request to the authorization server, 
  * or because the request could not be fulfilled for some other 

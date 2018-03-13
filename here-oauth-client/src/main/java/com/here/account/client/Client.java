@@ -15,12 +15,15 @@
  */
 package com.here.account.client;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.function.BiFunction;
 
 import com.here.account.http.HttpException;
 import com.here.account.http.HttpProvider;
+import com.here.account.http.HttpProvider.HttpRequest;
 import com.here.account.oauth2.AccessTokenException;
 import com.here.account.oauth2.ErrorResponse;
 import com.here.account.oauth2.RequestExecutionException;
@@ -32,6 +35,8 @@ import com.here.account.util.Serializer;
  * It is expected that a wrapper class invokes methods on an instance 
  * of this class, so that simple Java create(), read(), update(), 
  * and delete() methods can be written with POJOs.
+ * 
+ * Suitable for use with JSON-object response APIs.
  * 
  * @author kmccrack
  */
@@ -88,18 +93,24 @@ public class Client {
      * @param url the HTTP request URL
      * @param request the request object of type R, or null if no request object
      * @param responseClass the response object class, for deserialization
+     * @param errorResponseClass the response error object class, for deserialization
+     * @param newExceptionFunction the function for getting a new RuntimeException based
+     *      on the statusCode and error response object
      * @param <R> the Request parameterized type
      * @param <T> the Response parameterized type
+     * @param <U> the Response Error parameterized type
      * @return the Response of type T
      * @throws AccessTokenException
      * @throws RequestExecutionException
      * @throws ResponseParsingException
      */
-    public <R, T> T sendMessage(
+    public <R, T, U> T sendMessage(
             String method,
             String url,
             R request,
-            Class<T> responseClass)
+            Class<T> responseClass,
+            Class<U> errorResponseClass,
+            BiFunction<Integer, U, RuntimeException> newExceptionFunction)
             throws AccessTokenException, RequestExecutionException, ResponseParsingException {
 
         HttpProvider.HttpRequest httpRequest;
@@ -113,6 +124,23 @@ public class Client {
                         clientAuthorizer, method, url, jsonBody);
         }
 
+        return sendMessage(httpRequest, responseClass,
+                errorResponseClass, newExceptionFunction);
+    }
+    
+    /**
+     * Sends the requested HTTP Message to the Server.
+     *
+     * @param httpRequest the HTTP Request
+     * @param responseClass the Response class
+     * @param <T> the Response parameterized type
+     * @param <U> the Response Error parameterized type
+     * @return the Response object, deserialized
+     */
+    public <T, U> T sendMessage(HttpRequest httpRequest, Class<T> responseClass,
+            Class<U> errorResponseClass,
+            BiFunction<Integer, U, RuntimeException> newExceptionFunction) 
+            throws AccessTokenException, RequestExecutionException, ResponseParsingException {
         // blocking
         HttpProvider.HttpResponse apacheResponse = null;
         InputStream jsonInputStream = null;
@@ -134,27 +162,36 @@ public class Client {
                     throw new ResponseParsingException(e);
                 }
             } else {
-                ErrorResponse errorResponse;
+                U errorResponse;
                 try {
                     // parse the error response
-                    errorResponse = serializer.jsonToPojo(jsonInputStream, ErrorResponse.class);
+                    errorResponse = serializer.jsonToPojo(jsonInputStream, errorResponseClass);
                 } catch (Exception e) {
                     // if there is trouble parsing the error
                     throw new ResponseParsingException(e);
                 }
-                throw new AccessTokenException(statusCode, errorResponse);
+                throw newExceptionFunction.apply(statusCode, errorResponse);
             }
         } finally {
-            if (null != jsonInputStream) {
-                try {
-                    jsonInputStream.close();
-                } catch (IOException ioe) {
-                    throw new UncheckedIOException(ioe);
-                }
-
-            }
+            nullSafeCloseThrowingUnchecked(jsonInputStream);
         }
     }
 
+    /**
+     * A null-safe invocation of closeable.close(), such that if an IOException is 
+     * triggered, it is wrapped instead in an UncheckedIOException.
+     * 
+     * @param closeable the closeable to be closed
+     */
+    static void nullSafeCloseThrowingUnchecked(Closeable closeable) {
+        if (null != closeable) {
+            try {
+                closeable.close();
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
+        }
+
+    }
 
 }

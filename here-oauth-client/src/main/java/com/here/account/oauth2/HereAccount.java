@@ -20,12 +20,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
+import com.here.account.client.Client;
 import com.here.account.http.HttpConstants.ContentTypes;
-import com.here.account.http.HttpException;
 import com.here.account.http.HttpProvider;
 import com.here.account.util.JacksonSerializer;
 import com.here.account.util.ReadUtil;
@@ -198,6 +197,7 @@ public class HereAccount {
     private static class TokenEndpointImpl implements TokenEndpoint {
         public static final String HTTP_METHOD_POST = "POST";
         
+        private final Client client;
         private final HttpProvider httpProvider;
         private final String url;
         private final HttpProvider.HttpRequestAuthorizer clientAuthorizer;
@@ -216,9 +216,14 @@ public class HereAccount {
          */
         private TokenEndpointImpl(HttpProvider httpProvider, ClientAuthorizationRequestProvider clientAuthorizationProvider,
                 Serializer serializer) {
+            this.clientAuthorizer = clientAuthorizationProvider.getClientAuthorizer();
+            this.client = Client.builder()
+                    .withHttpProvider(httpProvider)
+                    .withClientAuthorizer(clientAuthorizer)
+                    .withSerializer(serializer)
+                    .build();
             this.httpProvider = httpProvider;
             this.url = clientAuthorizationProvider.getTokenEndpointUrl();
-            this.clientAuthorizer = clientAuthorizationProvider.getClientAuthorizer();
             this.requestContentType = clientAuthorizationProvider.getRequestContentType();
             this.serializer = serializer;
         }
@@ -239,41 +244,10 @@ public class HereAccount {
                     clientAuthorizer, method, url, authorizationRequest.toFormParams());
             }
             
-            // blocking
-            HttpProvider.HttpResponse apacheResponse = null;
-            InputStream jsonInputStream = null;
-            try {
-                apacheResponse = httpProvider.execute(apacheRequest);
-                jsonInputStream = apacheResponse.getResponseBody();
-            } catch (IOException | HttpException e) {
-                throw new RequestExecutionException(e);
-            }
-            
-            int statusCode = apacheResponse.getStatusCode();
-            try {
-                if (200 == statusCode) {
-                    try {
-                        jsonInputStream = readFully(jsonInputStream);
-                        
-                        return serializer.jsonToPojo(jsonInputStream,
-                                                     AccessTokenResponse.class);
-                    } catch (Exception e) {
-                        throw new ResponseParsingException(e);
-                    }
-                } else {
-                    ErrorResponse errorResponse;
-                    try {
-                        // parse the error response
-                        errorResponse = serializer.jsonToPojo(jsonInputStream, ErrorResponse.class);
-                    } catch (Exception e) {
-                        // if there is trouble parsing the error
-                        throw new ResponseParsingException(e);
-                    }
-                    throw new AccessTokenException(statusCode, errorResponse);
-                }
-            } finally {
-                nullSafeCloseThrowingUnchecked(jsonInputStream);
-            }
+            return client.sendMessage(apacheRequest, AccessTokenResponse.class,
+                    ErrorResponse.class, (statusCode, errorResponse) -> {
+                        return new AccessTokenException(statusCode, errorResponse);                        
+                    });
         }
         
         //@Override
@@ -317,7 +291,9 @@ public class HereAccount {
      * triggered, it is wrapped instead in an UncheckedIOException.
      * 
      * @param closeable the closeable to be closed
+     * @deprecated use Client method of the same name
      */
+    @Deprecated
     static void nullSafeCloseThrowingUnchecked(Closeable closeable) {
         if (null != closeable) {
             try {

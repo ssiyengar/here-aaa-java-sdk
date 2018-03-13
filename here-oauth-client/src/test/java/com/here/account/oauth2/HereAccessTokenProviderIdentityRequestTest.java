@@ -24,15 +24,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.here.account.auth.SignatureCalculatorTest;
 import com.here.account.auth.provider.ClientAuthorizationProviderChain;
 import com.here.account.auth.provider.IdentityAuthorizationRequestProvider;
 import com.here.account.http.HttpException;
@@ -87,11 +90,24 @@ public class HereAccessTokenProviderIdentityRequestTest {
         writeToFile(podNameFile, "pod-abc-123");
     }
     
+    File privateKeyFile;
+    
+    private void setUpPrivateKeyFile() throws IOException {
+        privateKeyFile = File.createTempFile(UUID.randomUUID().toString(), null);
+        KeyPair keyPair = SignatureCalculatorTest.generateES512KeyPair();
+        
+        final byte[] keyBytes = keyPair.getPrivate().getEncoded();
+        String keyBase64 = Base64.encodeBase64String(keyBytes);
+        
+        writeToFile(privateKeyFile, keyBase64);
+    }
+    
     @Before
     public void setUp() throws IOException {
         serializer = new JacksonSerializer();
         setUpIdentityFile();
         setUpPodNameFile();
+        setUpPrivateKeyFile();
         
         String tokenUrl = "http://example.com/token";
 
@@ -104,12 +120,10 @@ public class HereAccessTokenProviderIdentityRequestTest {
         clientAuthorizationRequestProvider = 
                 new IdentityAuthorizationRequestProvider(
                         serializer,
-                        null,
+                        privateKeyFile,
                         identityFile,
                         podNameFile,
                         tokenUrl);
-
-
     }
     
     @After

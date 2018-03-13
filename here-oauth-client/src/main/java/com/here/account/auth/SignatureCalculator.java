@@ -50,9 +50,9 @@ public class SignatureCalculator {
      */
     public static final String ELLIPTIC_CURVE_ALGORITHM = "EC";
 
-    public SignatureCalculator(String clientAccessKeyId, String clientAccessKeySecret) {
-        this.consumerKey = clientAccessKeyId;
-        this.consumerSecret = clientAccessKeySecret;
+    public SignatureCalculator(String consumerKey, String consumerSecret) {
+        this.consumerKey = consumerKey;
+        this.consumerSecret = consumerSecret;
     }
 
     /**
