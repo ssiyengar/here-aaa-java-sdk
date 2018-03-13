@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.here.account.service;
+package com.here.account.client;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,14 +28,14 @@ import com.here.account.oauth2.ResponseParsingException;
 import com.here.account.util.Serializer;
 
 /**
- * A Service that represents a Resource Server, in OAuth2-speak.
+ * A Client that talks to a Resource Server, in OAuth2-speak.
  * It is expected that a wrapper class invokes methods on an instance 
  * of this class, so that simple Java create(), read(), update(), 
  * and delete() methods can be written with POJOs.
  * 
  * @author kmccrack
  */
-public class Service {
+public class Client {
 
     public static class Builder {
         private HttpProvider httpProvider;
@@ -61,8 +61,8 @@ public class Service {
             return this;
         }
 
-        public Service build() {
-            return new Service(httpProvider, serializer, clientAuthorizer);
+        public Client build() {
+            return new Client(httpProvider, serializer, clientAuthorizer);
         }
     }
 
@@ -74,7 +74,7 @@ public class Service {
     private final Serializer serializer;
     private final HttpProvider.HttpRequestAuthorizer clientAuthorizer;
 
-    private Service(HttpProvider httpProvider, Serializer serializer,
+    private Client(HttpProvider httpProvider, Serializer serializer,
                     HttpProvider.HttpRequestAuthorizer clientAuthorizer) {
         this.httpProvider = httpProvider;
         this.serializer = serializer;
@@ -82,7 +82,7 @@ public class Service {
     }
 
     /**
-     * Gets the Response from the requested HTTP request.
+     * Sends the requested HTTP Message to the Server.
      *
      * @param method the HTTP method
      * @param url the HTTP request URL
@@ -95,7 +95,7 @@ public class Service {
      * @throws RequestExecutionException
      * @throws ResponseParsingException
      */
-    public <R, T> T getResponse(
+    public <R, T> T sendMessage(
             String method,
             String url,
             R request,

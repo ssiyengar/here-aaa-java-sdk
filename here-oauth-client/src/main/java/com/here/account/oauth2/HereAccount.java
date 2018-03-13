@@ -223,29 +223,9 @@ public class HereAccount {
             this.serializer = serializer;
         }
         
-        protected AccessTokenResponse requestTokenFromFile() 
-            throws RequestExecutionException {
-            try (InputStream is = new URL(url).openStream()){
-                return serializer.jsonToPojo(is,
-                        FileAccessTokenResponse.class);
-            } catch (IOException e) {
-                throw new RequestExecutionException(e);
-            }
-        }
-
         @Override
         public AccessTokenResponse requestToken(AccessTokenRequest authorizationRequest) 
-                throws AccessTokenException, RequestExecutionException, ResponseParsingException {
-            if (url.startsWith("file://")) {
-                return requestTokenFromFile();
-            } else {
-                return requestTokenHttp(authorizationRequest);
-            }
-        }
-        
-        protected AccessTokenResponse requestTokenHttp(AccessTokenRequest authorizationRequest) 
-                throws AccessTokenException, RequestExecutionException, ResponseParsingException {
-            
+                throws AccessTokenException, RequestExecutionException, ResponseParsingException {            
             String method = HTTP_METHOD_POST;
             
             HttpProvider.HttpRequest apacheRequest;
