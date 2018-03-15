@@ -190,7 +190,7 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
      */
     @Override
     public ContentTypes getRequestContentType() {
-        return ContentTypes.JSON;
+        return ContentTypes.FORM_URLENCODED;
     }
 
 }
