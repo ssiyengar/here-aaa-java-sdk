@@ -25,7 +25,6 @@ import com.here.account.http.HttpException;
 import com.here.account.http.HttpProvider;
 import com.here.account.http.HttpProvider.HttpRequest;
 import com.here.account.oauth2.AccessTokenException;
-import com.here.account.oauth2.ErrorResponse;
 import com.here.account.oauth2.RequestExecutionException;
 import com.here.account.oauth2.ResponseParsingException;
 import com.here.account.util.Serializer;

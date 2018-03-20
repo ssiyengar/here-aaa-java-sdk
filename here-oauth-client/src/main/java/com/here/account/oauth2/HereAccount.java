@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
@@ -228,21 +229,46 @@ public class HereAccount {
             this.serializer = serializer;
         }
         
+        protected AccessTokenResponse requestTokenFromFile() 
+                throws RequestExecutionException {
+            try (InputStream is = new URL(url).openStream()){
+                return serializer.jsonToPojo(is,
+                        FileAccessTokenResponse.class);
+            } catch (IOException e) {
+                throw new RequestExecutionException(e);
+            }
+        }
+        
+        private static final String FILE_URL_START = "file://";
+        
+        protected boolean isRequestTokenFromFile() {
+            return null != url && url.startsWith(FILE_URL_START);
+        }
+        
         @Override
         public AccessTokenResponse requestToken(AccessTokenRequest authorizationRequest) 
+                throws AccessTokenException, RequestExecutionException, ResponseParsingException {            
+            if (isRequestTokenFromFile()) {
+                return requestTokenFromFile();
+            } else {
+                return requestTokenHttp(authorizationRequest);
+            }
+        }
+        
+        protected AccessTokenResponse requestTokenHttp(AccessTokenRequest authorizationRequest) 
                 throws AccessTokenException, RequestExecutionException, ResponseParsingException {            
             String method = HTTP_METHOD_POST;
             
             HttpProvider.HttpRequest httpRequest;
-            if (ContentTypes.JSON == requestContentType) {
+            /*if (ContentTypes.JSON == requestContentType) {
                 String jsonBody = serializer.objectToJson(authorizationRequest);
                 httpRequest = httpProvider.getRequest(
                         clientAuthorizer, method, url, jsonBody);
-            } else {
+            } else {*/
                 // OAuth2.0 uses application/x-www-form-urlencoded
                 httpRequest = httpProvider.getRequest(
                     clientAuthorizer, method, url, authorizationRequest.toFormParams());
-            }
+            /*}*/
             
             return client.sendMessage(httpRequest, AccessTokenResponse.class,
                     ErrorResponse.class, (statusCode, errorResponse) -> {

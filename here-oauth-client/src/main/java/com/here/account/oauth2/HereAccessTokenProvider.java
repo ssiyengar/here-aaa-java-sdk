@@ -160,11 +160,16 @@ public class HereAccessTokenProvider implements AccessTokenProvider, Closeable {
      */
     @Override
     public String getAccessToken() {
+        return getAccessTokenResponse().getAccessToken();
+    }
+    
+    public AccessTokenResponse getAccessTokenResponse() {
         if (null != fresh) {
-            return fresh.get().getAccessToken();
+            return fresh.get();
         } else {
-            return tokenEndpoint.requestToken(accessTokenRequestSupplier.get()).getAccessToken();
+            return tokenEndpoint.requestToken(accessTokenRequestSupplier.get());
         }
+
     }
 
     /**
