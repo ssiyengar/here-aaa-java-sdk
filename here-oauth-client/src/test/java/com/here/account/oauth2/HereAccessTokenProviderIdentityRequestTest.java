@@ -56,6 +56,7 @@ public class HereAccessTokenProviderIdentityRequestTest {
     JacksonSerializer serializer;
     File identityFile;
     File podNameFile;
+    File podUidFile;
     ClientAuthorizationRequestProvider clientAuthorizationRequestProvider;
     
     protected void setUpIdentityFile() throws IOException {
@@ -90,6 +91,12 @@ public class HereAccessTokenProviderIdentityRequestTest {
         writeToFile(podNameFile, "pod-abc-123");
     }
     
+    private void setUpPodUidFile() throws IOException {
+        podUidFile = File.createTempFile(UUID.randomUUID().toString(), null);
+        writeToFile(podUidFile, "def-jkl-789");
+    }
+
+    
     File privateKeyFile;
     
     private void setUpPrivateKeyFile() throws IOException {
@@ -107,6 +114,7 @@ public class HereAccessTokenProviderIdentityRequestTest {
         serializer = new JacksonSerializer();
         setUpIdentityFile();
         setUpPodNameFile();
+        setUpPodUidFile();
         setUpPrivateKeyFile();
         
         String tokenUrl = "http://example.com/token";
@@ -123,6 +131,7 @@ public class HereAccessTokenProviderIdentityRequestTest {
                         privateKeyFile,
                         identityFile,
                         podNameFile,
+                        podUidFile,
                         tokenUrl);
     }
     

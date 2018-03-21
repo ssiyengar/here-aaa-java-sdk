@@ -17,6 +17,7 @@ package com.here.account.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -56,6 +57,15 @@ public class JacksonSerializer implements Serializer {
         try {
             return JsonSerializer.objectToJson(object);
         } catch (JsonProcessingException e) {
+            throw new RuntimeException("trouble serializing json: " + e, e);
+        }
+    }
+
+    @Override
+    public void writeObjectToJson(OutputStream outputStream, Object object) {
+        try {
+            JsonSerializer.writeObjectToJson(outputStream, object);
+        } catch (IOException e) {
             throw new RuntimeException("trouble serializing json: " + e, e);
         }
     }

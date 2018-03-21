@@ -57,6 +57,11 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
      */
     private static final String POD_NAME_FILE_PATH = "/var/run/podinfo/name";
     
+    /**
+     * The Pod Uid file.
+     */
+    private static final String POD_UID_FILE_PATH = "/var/run/podinfo/uid";
+    
     private static final String RUN_AS_ID = "runAsId";
     private static final String NAMESPACE = "namespace";
     private static final String RUN_AS_ID_NAME = "runAsIdName";
@@ -65,6 +70,7 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     private final File privateKeyFile;
     private final File identityFile;
     private final File podNameFile;
+    private final File podUidFile;
     private final String tokenUrl;
     
     public IdentityAuthorizationRequestProvider() {
@@ -72,6 +78,7 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
                 new File(IDENTITY_PRIVATE_KEY_FILE_PATH),
                 new File(IDENTITY_TOKEN_REQUEST_FILE_PATH),
                 new File(POD_NAME_FILE_PATH),
+                new File(POD_UID_FILE_PATH),
                 IDENTITY_SERVICE_TOKEN_ENDPOINT_URL);
     }
     
@@ -79,17 +86,20 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
             File privateKeyFile,
             File identityFile,
             File podNameFile,
+            File podUidFile,
             String tokenUrl) {
         Objects.requireNonNull(serializer, "serializer is required");
         Objects.requireNonNull(privateKeyFile, "privateKeyFile is required");        
         Objects.requireNonNull(identityFile, "identityFile is required");
         Objects.requireNonNull(podNameFile, "podNameFile is required");
+        Objects.requireNonNull(podUidFile, "podUidFile is required");
         Objects.requireNonNull(tokenUrl, "tokenUrl is required");
 
         this.serializer = serializer;
         this.privateKeyFile = privateKeyFile;
         this.identityFile = identityFile;
         this.podNameFile = podNameFile;
+        this.podUidFile = podUidFile;
         this.tokenUrl = tokenUrl;
     }
     
@@ -166,9 +176,8 @@ public class IdentityAuthorizationRequestProvider implements ClientAuthorization
     
     protected IdentityTokenRequest getRequest() {
         File identityFile = this.identityFile;
-        File podNameFile = this.podNameFile;
-
         String podName = readFullyToString(podNameFile);
+        String podUid = readFullyToString(podUidFile);
 
         try (InputStream identityInputStream = new FileInputStream(identityFile)) {
             Map<String, Object> identityMap = serializer.jsonToMap(identityInputStream);

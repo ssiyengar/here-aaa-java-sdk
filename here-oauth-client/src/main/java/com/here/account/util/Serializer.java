@@ -1,6 +1,7 @@
 package com.here.account.util;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 public interface Serializer {
@@ -17,5 +18,7 @@ public interface Serializer {
     <T> T jsonToPojo (InputStream jsonInputStream, Class<T> pojoClass);
     
     String objectToJson(Object object);
+    
+    void writeObjectToJson(OutputStream outputStream, Object object);
 
 }

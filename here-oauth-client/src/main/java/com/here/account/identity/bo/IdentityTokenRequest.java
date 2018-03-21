@@ -29,6 +29,7 @@ public class IdentityTokenRequest extends AccessTokenRequest {
     private String namespace;
     private String runAsIdName;
     private String podName;
+    private String podUid;
     
     public IdentityTokenRequest() {
         super(IDENTITY_GRANT_TYPE);
@@ -70,10 +71,21 @@ public class IdentityTokenRequest extends AccessTokenRequest {
         return this;
     }
     
+    public String getPodUid() {
+        return podUid;
+    }
+    
+    public IdentityTokenRequest withPodUid(String podUid) {
+        this.podUid = podUid;
+        return this;
+    }
+
+    
     private static final String RUN_AS_ID_FORM = "runAsId";
     private static final String NAMESPACE_FORM = "namespace";
     private static final String RUN_AS_ID_NAME_FORM = "runAsIdName";
     private static final String POD_NAME_FORM = "podName";
+    private static final String POD_UID_FORM = "podUid";
 
     /**
      * Converts this request, to its formParams Map representation.
@@ -87,6 +99,7 @@ public class IdentityTokenRequest extends AccessTokenRequest {
         addFormParam(formParams, NAMESPACE_FORM, getNamespace());
         addFormParam(formParams, RUN_AS_ID_NAME_FORM, getRunAsIdName());
         addFormParam(formParams, POD_NAME_FORM, getPodName());
+        addFormParam(formParams, POD_UID_FORM, getPodUid());
         return formParams;
     }
     
@@ -102,7 +115,8 @@ public class IdentityTokenRequest extends AccessTokenRequest {
                 .withRunAsId(getSingleFormValue(formParams, RUN_AS_ID_FORM))
                 .withNamespace(getSingleFormValue(formParams, NAMESPACE_FORM))
                 .withRunAsIdName(getSingleFormValue(formParams, RUN_AS_ID_NAME_FORM))
-                .withPodName(getSingleFormValue(formParams, POD_NAME_FORM));
+                .withPodName(getSingleFormValue(formParams, POD_NAME_FORM))
+                .withPodUid(getSingleFormValue(formParams, POD_UID_FORM));
         return identityTokenRequest;
     }
     
