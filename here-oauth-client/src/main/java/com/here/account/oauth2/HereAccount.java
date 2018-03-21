@@ -260,15 +260,9 @@ public class HereAccount {
             String method = HTTP_METHOD_POST;
             
             HttpProvider.HttpRequest httpRequest;
-            /*if (ContentTypes.JSON == requestContentType) {
-                String jsonBody = serializer.objectToJson(authorizationRequest);
-                httpRequest = httpProvider.getRequest(
-                        clientAuthorizer, method, url, jsonBody);
-            } else {*/
-                // OAuth2.0 uses application/x-www-form-urlencoded
-                httpRequest = httpProvider.getRequest(
-                    clientAuthorizer, method, url, authorizationRequest.toFormParams());
-            /*}*/
+            // OAuth2.0 uses application/x-www-form-urlencoded
+            httpRequest = httpProvider.getRequest(
+                clientAuthorizer, method, url, authorizationRequest.toFormParams());
             
             return client.sendMessage(httpRequest, AccessTokenResponse.class,
                     ErrorResponse.class, (statusCode, errorResponse) -> {
